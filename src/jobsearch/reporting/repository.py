@@ -35,8 +35,10 @@ def top_opportunities(conn, day: date, limit: int) -> list[tuple]:
     """Highest-scoring HIGH/MEDIUM jobs discovered on ``day``."""
     with conn.cursor() as cur:
         cur.execute(
-            "SELECT j.company_name, j.role_category, j.title, s.match_score, s.priority, j.url "
+            "SELECT j.company_name, j.role_category, j.title, s.match_score, s.priority, j.url, "
+            "       c.tier "
             "FROM jobs j JOIN job_scores s ON s.job_id = j.id "
+            "LEFT JOIN companies c ON j.company_id = c.id "
             "WHERE j.discovered_date::date = %s AND s.priority IN ('HIGH','MEDIUM') "
             "ORDER BY s.match_score DESC, j.id LIMIT %s",
             (day, limit),

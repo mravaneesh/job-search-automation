@@ -1,0 +1,26 @@
+# Application-intelligence behaviour. Tunable without code changes.
+
+# Materials are generated ONLY for HIGH-priority jobs or jobs the user
+# explicitly selects on the CLI. This is the token-optimization gate.
+generate_only_priority: HIGH
+
+# Cover letters are generated only when BOTH hold (unless --force is passed).
+cover_letter:
+  min_match_score: 80
+  require_priority: HIGH
+
+# Suggested-application-strategy thresholds on the match score.
+strategy:
+  apply_immediately: 85   # >= -> "Apply immediately"
+  strong_apply: 72        # >= -> "Strong fit — apply"
+  # below strong_apply    -> "Consider / tailor before applying"
+
+# Optional LLM polish of generated drafts. Deterministic templates are the
+# default (0 tokens). When enabled AND ANTHROPIC_API_KEY is set, drafts are
+# refined within the daily token budget. Never sends anything — drafts only.
+use_llm: false
+model: claude-opus-4-8
+max_tokens_per_day: 20000
+
+# How many tailored bullet suggestions to produce.
+bullet_suggestions: 4

@@ -275,3 +275,129 @@ is in **[DEPLOYMENT.md](DEPLOYMENT.md)**.
 
 `config/reporting.yaml` — `top_opportunities`, `notify_priorities`, and the role
 labels shown in the report.
+
+---
+
+# Phase 4 — Application Intelligence
+
+Prepares everything needed for a high-quality application — resume selection +
+tailoring suggestions, cover letters, recruiter outreach drafts, application
+tracking, salary intelligence, and company tiering. **It never submits anything
+— drafts only**, and it generates materials **only for HIGH-priority or
+user-selected jobs**, deterministically by default (zero tokens).
+
+```
+existing jobs + scores + companies ──┐
+                                     ▼
+        ┌──────────── Application Intelligence ─────────────┐
+        │  resume selection (deterministic)                 │
+        │  recommendation: why-fit / missing / strategy     │
+        │  cover letter   (gated: HIGH + score≥threshold)   │──▶ application_artifacts (deduped)
+        │  recruiter outreach (linkedin / email / follow-up)│
+        │  application tracking (SAVED→…→OFFER/REJECTED)     │──▶ applications, recruiters
+        │  salary extraction · company tiering              │──▶ jobs.salary_*, companies.tier
+        └───────────────────────────────────────────────────┘
+        deterministic by default · optional LLM polish (budget-guarded)
+```
+
+## What's new
+
+- **Reuses existing data** — pulls role, score, matched/missing skills, company
+  from Phases 1–2; nothing is duplicated. Phases 1–3 are untouched except a
+  small additive change to expose **company tier** in the daily report.
+- **Deterministic-first** — selection, recommendations, drafts, salary parsing,
+  and tiering are pure code (0 tokens). An optional `--llm` flag polishes drafts
+  within the same daily budget; it never receives HTML/raw descriptions and
+  never sends anything.
+- **Token gate** — materials are produced only for HIGH-priority jobs or jobs
+  you explicitly pass on the CLI. Cover letters have an extra gate (priority
+  HIGH **and** `match_score ≥ min`). Artifacts are deduped by input hash, so an
+  unchanged job never triggers a second LLM call.
+
+## Schema (additive — migration `004_application_intelligence.sql`)
+
+```
+jobs        + salary_min, salary_max, currency, compensation_source
+companies   + tier  (tier1 / tier2 / tier3)
+
+resumes(id, role_category, name, version, focus_skills[], themes[], file_path, …)
+recruiters(id, name, company, linkedin_url, email, contacted_at,
+           response_status[NOT_CONTACTED|CONTACTED|RESPONDED|INTERVIEWING|REJECTED], notes)
+applications(id, job_id→jobs, status[SAVED|READY_TO_APPLY|APPLIED|RECRUITER_SCREEN|
+             ONLINE_ASSESSMENT|TECHNICAL|FINAL|OFFER|REJECTED],
+             application_date, last_update, recruiter_id→recruiters, resume_id→resumes,
+             resume_version, notes)            UNIQUE(job_id)
+application_artifacts(id, job_id→jobs, kind, content, generated_by, input_hash)
+                                               UNIQUE(job_id, kind, input_hash)   ← dedup
+generation_runs(id, started_at, kind, input_tokens, output_tokens)  ← daily LLM budget
+```
+
+## CLI commands
+
+| Command | Purpose |
+|---|---|
+| `resume-select --job <id> [--apply]` | Pick the best master resume + tailoring tips; `--apply` stores it on the application |
+| `application-recommend --job <id> [--output PATH]` | Why-fit / missing skills / resume recs / strategy |
+| `generate-cover-letter --job <id> [--force] [--llm] [--output PATH]` | Tailored cover letter (gated; `--force` bypasses the gate) |
+| `generate-outreach --job <id> [--kind linkedin\|email\|followup\|all] [--recruiter <id>] [--llm]` | Recruiter outreach drafts |
+| `application-create --job <id> [--status] [--notes]` | Start tracking an application |
+| `application-update --job <id> [--status] [--recruiter <id>] [--resume <id>] [--notes] [--date]` | Advance the workflow |
+| `application-list [--status] [--limit]` | List tracked applications |
+| `recruiter-add --name <n> [--company] [--linkedin] [--email] [--notes]` | Add a recruiter |
+| `salary-backfill` | Extract salary for jobs that lack it (from `raw` + description) |
+| `tiers-sync` | Persist company tiers from config onto `companies.tier` |
+| `resumes-sync` | Persist master resumes from config into the DB |
+
+## Usage examples
+
+```bash
+python -m jobsearch migrate          # applies 004 (additive)
+python -m jobsearch resumes-sync     # seed master resumes
+python -m jobsearch tiers-sync       # set company tiers
+python -m jobsearch salary-backfill  # opportunistically fill salary
+
+# For a HIGH-priority job (id 9):
+python -m jobsearch application-recommend --job 9
+python -m jobsearch resume-select --job 9 --apply
+python -m jobsearch generate-cover-letter --job 9 --output out/cover_9.txt
+python -m jobsearch recruiter-add --name "Dana" --company Stripe --email dana@stripe.com
+python -m jobsearch generate-outreach --job 9 --kind all --recruiter 1
+
+# Track it through the funnel:
+python -m jobsearch application-create --job 9 --status SAVED
+python -m jobsearch application-update --job 9 --status APPLIED --recruiter 1
+python -m jobsearch application-list --status APPLIED
+```
+
+Example `application-recommend` output:
+
+```
+MATCH SCORE: 98   PRIORITY: HIGH
+Acme — Android Engineer
+Best resume: Android (v1)
+
+Why:
+  - Strong skill match: Android SDK, Kotlin.
+  - Experience requirement aligns with your ~2 years.
+Missing:
+  - none
+Recommendation: Apply immediately.
+```
+
+## Configuration (no code changes)
+
+- `config/candidate.yaml` — identity used in drafts.
+- `config/resumes.yaml` — the three master resumes (focus skills + themes).
+- `config/company_tiers.yaml` — Tier 1/2 lists; everything else is Tier 3.
+- `config/application.yaml` — cover-letter gate, strategy thresholds, bullet
+  count, and the optional LLM toggle/model/`max_tokens_per_day`.
+
+## Migration guide (Phase 3 → Phase 4)
+
+1. `pip install -r requirements-dev.txt && pip install -e .` (no new deps).
+2. `python -m jobsearch migrate` — applies `004_application_intelligence.sql`
+   (purely additive: new columns on `jobs`/`companies`, new tables; nothing
+   dropped or altered).
+3. `python -m jobsearch resumes-sync && python -m jobsearch tiers-sync`.
+4. Review `config/candidate.yaml` and `config/application.yaml`.
+5. Generate materials for HIGH-priority jobs as shown above.

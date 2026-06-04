@@ -1,0 +1,61 @@
+# Master resumes. The engine selects the best one per job deterministically
+# (by role match + skill overlap) and produces tailored recommendations —
+# it never rewrites the resume unless explicitly asked.
+#
+# focus_skills should use the canonical skill vocabulary (config/skills.yaml)
+# so they intersect with skills extracted from postings.
+
+resumes:
+  - role_category: android
+    name: Android
+    version: 1
+    file_path: resumes/android.pdf      # informational; not read by the engine
+    focus_skills:
+      - Kotlin
+      - Android SDK
+      - Jetpack Compose
+      - Java
+      - REST
+    themes:
+      - Android
+      - MVVM
+      - Coroutines
+      - Jetpack Compose
+      - Architecture
+
+  - role_category: backend
+    name: Backend
+    version: 1
+    file_path: resumes/backend.pdf
+    focus_skills:
+      - Java
+      - Spring
+      - PostgreSQL
+      - MySQL
+      - REST
+      - gRPC
+    themes:
+      - Java
+      - Spring Boot
+      - APIs
+      - SQL
+      - Distributed Systems
+
+  - role_category: ai_ml
+    name: AI
+    version: 1
+    file_path: resumes/ai.pdf
+    focus_skills:
+      - Python
+      - PyTorch
+      - LLM
+      - NLP
+      - RAG
+      - Vector Databases
+      - AI Agents
+    themes:
+      - LLMs
+      - RAG
+      - AI Agents
+      - Vector Databases
+      - Prompt Engineering

@@ -25,6 +25,7 @@ class Opportunity:
     match_score: int
     priority: str
     url: str
+    tier: str | None = None
 
 
 @dataclass
@@ -72,6 +73,7 @@ class DailyReport:
                 match_score=int(row[3]),
                 priority=row[4],
                 url=row[5],
+                tier=row[6] if len(row) > 6 else None,
             )
             for row in opp_rows
         ]
@@ -102,7 +104,8 @@ class DailyReport:
         if not self.top_opportunities:
             lines.append("  (none)")
         for i, o in enumerate(self.top_opportunities, 1):
-            lines.append(f"  {i}. {o.company} — {o.title} [{o.role}]")
+            tier = f" · {o.tier}" if o.tier else ""
+            lines.append(f"  {i}. {o.company} — {o.title} [{o.role}]{tier}")
             lines.append(f"     score {o.match_score} ({o.priority})  {o.url}")
         return "\n".join(lines)
 
@@ -159,9 +162,9 @@ class DailyReport:
         opp_rows = "".join(
             f"<tr><td>{i}</td><td>{e(o.company)}</td><td>{e(o.role)}</td>"
             f'<td><a href="{e(o.url)}">{e(o.title)}</a></td>'
-            f"<td>{o.match_score}</td><td>{e(o.priority)}</td></tr>"
+            f"<td>{o.match_score}</td><td>{e(o.priority)}</td><td>{e(o.tier or '—')}</td></tr>"
             for i, o in enumerate(self.top_opportunities, 1)
-        ) or '<tr><td colspan="6">None</td></tr>'
+        ) or '<tr><td colspan="7">None</td></tr>'
         updated = (
             f"<p>New / updated matches: <strong>{self.new_or_updated}</strong></p>"
             if self.new_or_updated
@@ -176,5 +179,6 @@ class DailyReport:
             f"</tr></thead><tbody>{rows}</tbody></table>"
             "<h3>Top Opportunities</h3>"
             "<table><thead><tr><th>#</th><th>Company</th><th>Role</th><th>Title</th>"
-            f"<th>Score</th><th>Priority</th></tr></thead><tbody>{opp_rows}</tbody></table>"
+            f"<th>Score</th><th>Priority</th><th>Tier</th></tr></thead>"
+            f"<tbody>{opp_rows}</tbody></table>"
         )

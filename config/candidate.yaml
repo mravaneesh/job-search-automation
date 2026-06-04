@@ -1,0 +1,16 @@
+# Candidate identity used in generated cover letters and outreach drafts.
+# Edit freely — no code changes needed. (Skills/experience live in profile.yaml.)
+
+name: Avaneesh Pandey
+email: avaneeshpandey0830@gmail.com
+phone: ""
+location: India
+linkedin: ""
+github: ""
+
+# One-line headline and a short reusable summary paragraph.
+headline: Software Engineer — Android · Backend · AI/ML
+summary: >-
+  Software engineer with ~2 years of experience building Android applications
+  with Kotlin and modern architecture, backend services in Java/Spring Boot,
+  and applied AI features using LLMs and RAG.

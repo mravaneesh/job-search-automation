@@ -1,0 +1,27 @@
+# Company tiers. Companies not listed in tier1/tier2 fall through to the
+# default tier (tier3: unicorns, startups, other). Matching is case-insensitive.
+# Edit without touching code; run `jobsearch tiers-sync` to persist onto the
+# companies table.
+
+default: tier3
+
+tiers:
+  tier1:
+    - Google
+    - Meta
+    - Stripe
+    - Databricks
+    - OpenAI
+    - Anthropic
+  tier2:
+    - Adobe
+    - Atlassian
+    - Uber
+    - LinkedIn
+    - ServiceNow
+    - Nutanix
+
+labels:
+  tier1: "Tier 1"
+  tier2: "Tier 2"
+  tier3: "Tier 3"
