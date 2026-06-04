@@ -1,0 +1,44 @@
+# Scoring configuration. All weights/thresholds are tunable here without code
+# changes. Bump scorer_version whenever the scoring logic changes — existing
+# rows with an older version are automatically re-scored.
+
+scorer_version: 1
+
+# ----- LLM refinement (optional) -----
+# The engine is fully deterministic by default. When use_llm is true AND an
+# ANTHROPIC_API_KEY is present, the LLM refines ONLY the interview-likelihood
+# dimension, receiving structured JSON (never HTML/descriptions). Daily token
+# spend is capped by max_tokens_per_day.
+use_llm: false
+model: claude-opus-4-8
+batch_size: 15
+max_tokens_per_day: 20000
+
+# ----- Final score weights (must sum to 1.0) -----
+weights:
+  skill: 0.30
+  experience: 0.15
+  location: 0.10
+  seniority: 0.10
+  company: 0.10
+  interview: 0.25
+
+# ----- Priority thresholds on the final 0-100 match score -----
+priority_thresholds:
+  high: 75
+  medium: 55
+
+# ----- Role-fit multiplier applied to the final score -----
+role_priority_factor:
+  primary: 1.0
+  secondary: 0.9
+  stretch: 0.78
+
+# ----- Company quality by Phase 1 registry category -----
+company_quality:
+  global: 100
+  ai: 95
+  backend: 90
+  india_product: 85
+  unicorn: 80
+  default: 60

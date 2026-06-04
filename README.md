@@ -132,3 +132,92 @@ Collector tests use saved JSON/HTML fixtures — **no live network calls in CI**
 
 After tuning roles/skills, run `renormalize` to re-classify existing rows from
 their stored `raw` payloads without hitting any source again.
+
+---
+
+# Phase 2 — Scoring Engine
+
+Evaluates collected jobs against a candidate profile and assigns each a match
+score, missing skills, and a HIGH/MEDIUM/LOW priority.
+
+> **Deterministic by default.** Skill, experience, location, seniority, and
+> company-quality scoring is pure code — **zero tokens**. An LLM optionally
+> refines only the *interview-likelihood* dimension, receives **structured JSON
+> only** (never HTML or job descriptions), is batched, prompt-cached, and capped
+> by a daily token budget. Target: **< 20k tokens/day** — met by construction.
+
+## How scoring works
+
+```
+open jobs ─▶ re-score guard ─▶ deterministic engine ─▶ [optional LLM refine] ─▶ job_scores
+            (input hash +        6 sub-scores →           interview-likelihood
+             scorer_version)     weighted match score      via structured JSON
+```
+
+1. **Re-score guard** — only **new or changed** jobs are scored. Each score row
+   stores an `input_hash` (a fingerprint of the job's scoring-relevant fields)
+   and the `scorer_version`. A job is re-scored only if it is unscored, its
+   inputs changed, or the scorer version bumped. Unchanged jobs are skipped.
+2. **Deterministic engine** (`src/jobsearch/scoring/engine.py`) computes six
+   0-100 dimensions — **skill match**, **experience match**, **location match**,
+   **seniority**, **company quality**, and a baseline **interview likelihood** —
+   combines them by configured weights, applies a role-priority multiplier
+   (Android primary > Backend secondary > AI/ML stretch), and maps the result to
+   a priority. It also emits `matched_skills` and `missing_skills`.
+3. **Optional LLM refinement** (`src/jobsearch/scoring/llm.py`) — when
+   `use_llm: true` in `config/scoring.yaml` **and** `ANTHROPIC_API_KEY` is set,
+   Claude re-estimates the interview-likelihood dimension from a compact JSON
+   payload (role, title, company tier, location, matched/missing skills, the
+   deterministic sub-scores). The stable system prompt (profile + rubric) is
+   prompt-cached; thinking is disabled and output is constrained to a small JSON
+   schema; batches are capped by `max_tokens_per_day`. Falls back to
+   deterministic scoring if the key is missing, the budget is exhausted, or a
+   call fails.
+
+## Profile & tuning (no code changes)
+
+- **Profile:** `config/profile.yaml` — experience, role priorities, preferred
+  locations, skills per role.
+- **Scoring:** `config/scoring.yaml` — weights, priority thresholds, role-fit
+  multipliers, company-quality tiers, `scorer_version`, and the LLM toggle/model/
+  budget. Bump `scorer_version` to force a full re-score after a logic change.
+
+## Run it
+
+```bash
+python -m jobsearch migrate              # applies 002_scoring.sql
+python -m jobsearch score                # score new/changed jobs (deterministic)
+python -m jobsearch score --dry-run      # score without writing
+python -m jobsearch score --rescore-all  # re-score every open job
+python -m jobsearch score --llm          # force-enable LLM refinement (needs ANTHROPIC_API_KEY)
+python -m jobsearch score --no-llm       # force-disable LLM refinement
+```
+
+| Output column (`job_scores`) | Meaning |
+|---|---|
+| `match_score` | 0-100 overall fit |
+| `priority` | HIGH / MEDIUM / LOW |
+| `missing_skills` | job-required skills the candidate lacks |
+| `matched_skills` | overlap with the profile |
+| `scored_by` | `deterministic` or the model id |
+
+## Tokens & cost
+
+The default run uses **0 tokens** (deterministic). With `--llm`, every run is
+recorded in `scoring_runs` with its token usage; the next run sums today's usage
+and stops calling the model once `max_tokens_per_day` is reached. Because only
+new/changed jobs are scored, only the stable system prompt is cached, and only
+structured JSON is sent, steady-state usage stays well under 20k/day. The model
+defaults to `claude-opus-4-8`; set `model: claude-haiku-4-5` in `scoring.yaml`
+for the cheapest option if you enable the LLM at high volume.
+
+## Migration steps (Phase 1 → Phase 2)
+
+1. Pull the branch and `pip install -r requirements-dev.txt && pip install -e .`
+   (adds `anthropic`).
+2. `python -m jobsearch migrate` — applies `002_scoring.sql` (additive; the
+   `jobs`/`companies` tables and all collectors are unchanged).
+3. Review `config/profile.yaml` and `config/scoring.yaml`.
+4. `python -m jobsearch score` to score the existing backlog.
+5. (Optional) set `ANTHROPIC_API_KEY`, flip `use_llm: true`, and run
+   `python -m jobsearch score --llm`.

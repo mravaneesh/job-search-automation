@@ -1,0 +1,47 @@
+# Candidate profile used by the scoring engine. Edit freely — no code changes
+# needed. Skill names should use the canonical vocabulary from config/skills.yaml
+# so they intersect with the skills extracted from job postings in Phase 1.
+
+experience_years: 2
+
+# Each role maps to a priority tier; tiers map to a final-score multiplier in
+# config/scoring.yaml (role_priority_factor).
+role_priority:
+  android: primary
+  backend: secondary
+  ai_ml: stretch
+
+# Locations considered a good fit (case-insensitive substring match against the
+# job's location). Remote/Hybrid are scored separately in the engine.
+preferred_locations:
+  - India
+  - Bengaluru
+  - Bangalore
+  - Hyderabad
+  - Remote
+  - Hybrid
+
+# Skills grouped by role, for readability. Matching uses the union of all of
+# these against a posting's extracted skills.
+skills:
+  android:
+    - Kotlin
+    - Java
+    - Android SDK
+    - Jetpack Compose
+    - REST
+  backend:
+    - Java
+    - Spring
+    - PostgreSQL
+    - MySQL
+    - REST
+    - gRPC
+  ai_ml:
+    - Python
+    - PyTorch
+    - LLM
+    - NLP
+    - RAG
+    - Vector Databases
+    - AI Agents
