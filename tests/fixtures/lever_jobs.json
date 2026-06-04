@@ -1,0 +1,20 @@
+[
+  {
+    "id": "abc-123",
+    "text": "Machine Learning Engineer",
+    "hostedUrl": "https://jobs.lever.co/acme/abc-123",
+    "categories": {"location": "Bengaluru", "commitment": "Full-time", "team": "ML"},
+    "description": "<p>Work on deep learning and LLM systems with PyTorch.</p>",
+    "descriptionPlain": "Work on deep learning and LLM systems with PyTorch.",
+    "createdAt": 1714560000000
+  },
+  {
+    "id": "def-456",
+    "text": "Office Manager",
+    "hostedUrl": "https://jobs.lever.co/acme/def-456",
+    "categories": {"location": "Mumbai", "commitment": "Full-time", "team": "Ops"},
+    "description": "<p>Manage the office.</p>",
+    "descriptionPlain": "Manage the office.",
+    "createdAt": 1714560000000
+  }
+]

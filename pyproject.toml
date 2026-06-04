@@ -1,0 +1,45 @@
+[project]
+name = "jobsearch"
+version = "0.1.0"
+description = "Phase 1 — autonomous job collection and storage (deterministic, no LLM)"
+requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.27",
+    "tenacity>=8.2",
+    "pyyaml>=6.0",
+    "psycopg[binary]>=3.1",
+    "selectolax>=0.3.21",
+    "structlog>=24.1",
+    "playwright>=1.44",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.4",
+]
+
+[project.scripts]
+jobsearch = "jobsearch.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+markers = [
+    "db: tests that require a live PostgreSQL database (set DATABASE_URL)",
+]

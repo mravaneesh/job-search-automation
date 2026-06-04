@@ -1,0 +1,29 @@
+{
+  "jobs": [
+    {
+      "id": 100001,
+      "title": "Senior Backend Engineer",
+      "absolute_url": "https://boards.greenhouse.io/acme/jobs/100001",
+      "location": {"name": "Bengaluru, India"},
+      "updated_at": "2026-05-01T10:00:00-04:00",
+      "first_published": "2026-04-15T09:00:00-04:00",
+      "content": "&lt;p&gt;We are hiring a backend engineer. You will build &lt;strong&gt;distributed systems&lt;/strong&gt; in Go and work with Kafka and PostgreSQL.&lt;/p&gt;"
+    },
+    {
+      "id": 100002,
+      "title": "Android Engineer",
+      "absolute_url": "https://boards.greenhouse.io/acme/jobs/100002",
+      "location": {"name": "Remote"},
+      "updated_at": "2026-05-02T10:00:00-04:00",
+      "content": "&lt;p&gt;Build our Android app with Kotlin and Jetpack Compose.&lt;/p&gt;"
+    },
+    {
+      "id": 100003,
+      "title": "Technical Recruiter",
+      "absolute_url": "https://boards.greenhouse.io/acme/jobs/100003",
+      "location": {"name": "London, UK"},
+      "updated_at": "2026-05-03T10:00:00-04:00",
+      "content": "&lt;p&gt;Hire great people.&lt;/p&gt;"
+    }
+  ]
+}

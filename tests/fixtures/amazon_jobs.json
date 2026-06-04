@@ -1,0 +1,24 @@
+{
+  "error": null,
+  "hits": 2,
+  "jobs": [
+    {
+      "id_icims": "2500001",
+      "title": "Software Development Engineer - Backend",
+      "job_path": "/en/jobs/2500001/software-development-engineer-backend",
+      "normalized_location": "Bengaluru, KA, India",
+      "posted_date": "May 1, 2026",
+      "job_schedule_type": "Full Time",
+      "description": "<p>Design distributed systems and microservices in Java and AWS.</p>"
+    },
+    {
+      "id_icims": "2500002",
+      "title": "Program Manager",
+      "job_path": "/en/jobs/2500002/program-manager",
+      "normalized_location": "Hyderabad, TS, India",
+      "posted_date": "May 2, 2026",
+      "job_schedule_type": "Full Time",
+      "description": "<p>Coordinate programs.</p>"
+    }
+  ]
+}

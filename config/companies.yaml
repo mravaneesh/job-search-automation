@@ -1,0 +1,230 @@
+# Company / source registry — the single source of truth for collection targets.
+#
+# status:
+#   implemented -> a deterministic collector exists and the token is verified
+#   pending     -> registered for coverage tracking; collector or token not yet confirmed
+#
+# Tokens for pending entries are best-effort guesses and MUST be verified before
+# flipping to "implemented". The registry doubles as a coverage map.
+
+companies:
+  # ---------- Global ----------
+  - name: Google
+    category: global
+    source: career_page
+    status: pending          # bespoke careers API (careers.google.com/api/v3)
+  - name: Microsoft
+    category: global
+    source: career_page
+    status: pending
+  - name: Amazon
+    category: global
+    source: career_page
+    status: implemented
+    spec:
+      url: "https://www.amazon.jobs/en/search.json"
+      params:
+        base_query: "software engineer"
+        result_limit: 100
+      results_path: "jobs"
+      pagination: { offset_param: "offset", page_size: 100, max_pages: 3 }
+      url_prefix: "https://www.amazon.jobs"
+      fields:
+        source_job_id: "id_icims"
+        title: "title"
+        url: "job_path"
+        location: "normalized_location"
+        description_html: "description"
+        created_date: "posted_date"
+        employment_type: "job_schedule_type"
+  - name: Meta
+    category: global
+    source: career_page
+    status: pending
+  - name: Apple
+    category: global
+    source: career_page
+    status: pending
+  - name: Netflix
+    category: global
+    source: career_page
+    status: pending          # Netflix migrated to a bespoke portal
+  - name: Uber
+    category: global
+    source: career_page
+    status: pending
+  - name: Airbnb
+    category: global
+    source: greenhouse
+    token: airbnb
+    status: implemented
+  - name: Stripe
+    category: global
+    source: greenhouse
+    token: stripe
+    status: implemented
+
+  # ---------- India Product ----------
+  - name: Adobe
+    category: india_product
+    source: career_page
+    status: pending
+  - name: Atlassian
+    category: india_product
+    source: lever
+    token: atlassian
+    status: pending
+  - name: Salesforce
+    category: india_product
+    source: career_page
+    status: pending
+  - name: Intuit
+    category: india_product
+    source: career_page
+    status: pending
+  - name: ServiceNow
+    category: india_product
+    source: career_page
+    status: pending
+  - name: Nutanix
+    category: india_product
+    source: greenhouse
+    token: nutanix
+    status: pending
+  - name: LinkedIn
+    category: india_product
+    source: career_page
+    status: pending
+  - name: Walmart Global Tech
+    category: india_product
+    source: career_page
+    status: pending
+
+  # ---------- Indian Unicorns ----------
+  - name: Razorpay
+    category: unicorn
+    source: lever
+    token: razorpay
+    status: pending
+  - name: PhonePe
+    category: unicorn
+    source: career_page
+    status: pending
+  - name: CRED
+    category: unicorn
+    source: lever
+    token: cred
+    status: pending
+  - name: Groww
+    category: unicorn
+    source: lever
+    token: groww
+    status: pending
+  - name: Meesho
+    category: unicorn
+    source: lever
+    token: meesho
+    status: pending
+  - name: Zepto
+    category: unicorn
+    source: career_page
+    status: pending
+  - name: Navi
+    category: unicorn
+    source: lever
+    token: navi
+    status: pending
+  - name: Slice
+    category: unicorn
+    source: lever
+    token: sliceit
+    status: pending
+  - name: Porter
+    category: unicorn
+    source: lever
+    token: porter
+    status: pending
+
+  # ---------- AI ----------
+  - name: OpenAI
+    category: ai
+    source: ashby
+    token: openai
+    status: pending
+  - name: Anthropic
+    category: ai
+    source: greenhouse
+    token: anthropic
+    status: implemented
+  - name: Perplexity
+    category: ai
+    source: ashby
+    token: perplexity
+    status: pending
+  - name: Cohere
+    category: ai
+    source: ashby
+    token: cohere
+    status: pending
+  - name: Sarvam AI
+    category: ai
+    source: career_page
+    status: pending
+  - name: Krutrim
+    category: ai
+    source: career_page
+    status: pending
+  - name: Yellow.ai
+    category: ai
+    source: lever
+    token: yellowmessenger
+    status: pending
+
+  # ---------- Backend ----------
+  - name: Databricks
+    category: backend
+    source: greenhouse
+    token: databricks
+    status: implemented
+  - name: Snowflake
+    category: backend
+    source: greenhouse
+    token: snowflakecomputing
+    status: pending
+  - name: Confluent
+    category: backend
+    source: greenhouse
+    token: confluent
+    status: pending
+  - name: MongoDB
+    category: backend
+    source: greenhouse
+    token: mongodb
+    status: pending
+  - name: Elastic
+    category: backend
+    source: greenhouse
+    token: elastic
+    status: pending
+  - name: Rubrik
+    category: backend
+    source: greenhouse
+    token: rubrik
+    status: pending
+
+# Aggregator search targets (Playwright-based, deterministic DOM extraction).
+# These are searched by role query, not per-company. Marked pending because
+# they are brittle and subject to anti-bot defences / ToS limits.
+aggregators:
+  - source: linkedin
+    status: pending
+    locations: ["India", "Remote"]
+  - source: indeed
+    status: pending
+    locations: ["India"]
+  - source: naukri
+    status: pending
+    locations: ["India"]
+  - source: wellfound
+    status: pending
+    locations: ["India", "Remote"]

@@ -1,0 +1,53 @@
+# Deterministic role classification rules.
+#
+# A posting is assigned the FIRST role (in this order) whose keywords match the
+# title; if no title match, the description is checked. Postings matching none
+# of the three target roles are DROPPED. Matching is case-insensitive on word
+# boundaries. Precision is favoured over recall: a generic "Software Engineer"
+# with no role-specific signal is intentionally not collected.
+
+priority: [android, ai_ml, backend]
+
+roles:
+  android:
+    title_keywords:
+      - android
+    description_keywords:
+      - android
+      - jetpack compose
+      - kotlin multiplatform
+
+  ai_ml:
+    title_keywords:
+      - machine learning
+      - ml engineer
+      - ai engineer
+      - applied scientist
+      - research engineer
+      - research scientist
+      - data scientist
+      - deep learning
+      - nlp
+      - computer vision
+      - llm
+      - genai
+      - generative ai
+    description_keywords:
+      - machine learning engineer
+      - deep learning
+      - large language model
+
+  backend:
+    title_keywords:
+      - backend
+      - back-end
+      - back end
+      - server-side
+      - distributed systems
+      - platform engineer
+      - api engineer
+      - microservices
+    description_keywords:
+      - backend engineer
+      - distributed systems
+      - microservices architecture
