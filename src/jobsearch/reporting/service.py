@@ -26,6 +26,7 @@ def build_daily_report(conn, day: date, config: ReportingConfig) -> DailyReport:
         jobs_found_today=repo.count_jobs_found_today(conn, day),
         count_rows=repo.role_priority_counts(conn, day),
         opp_rows=repo.top_opportunities(conn, day, config.top_opportunities),
+        match_rows=repo.all_matches(conn, day, config.full_list_priorities, config.full_list_limit),
         config=config,
     )
 

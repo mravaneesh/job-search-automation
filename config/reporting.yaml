@@ -1,8 +1,16 @@
 # Reporting / notification behaviour. Channel credentials come from environment
 # variables (secrets), not from this file.
 
-# Number of jobs shown in the "Top Opportunities" section.
+# Number of jobs shown in the highlighted "Top Opportunities" section.
 top_opportunities: 10
+
+# The report/email/dashboard also include a FULL "All Matches" list with links.
+# These control which priorities appear there and a safety cap on the count.
+# Add LOW here if you want every scored job (can be a very long email).
+full_list_priorities:
+  - HIGH
+  - MEDIUM
+full_list_limit: 1000
 
 # A job is eligible for notification (when new or score-changed) only if its
 # priority is in this set. This implements "notify only for new jobs, score

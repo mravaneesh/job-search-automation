@@ -46,6 +46,22 @@ def top_opportunities(conn, day: date, limit: int) -> list[tuple]:
         return list(cur.fetchall())
 
 
+def all_matches(conn, day: date, priorities: list[str], limit: int) -> list[tuple]:
+    """Every job discovered on ``day`` with a score in ``priorities`` — the full
+    list (company, role, title, score, priority, url, tier, location)."""
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT j.company_name, j.role_category, j.title, s.match_score, s.priority, j.url, "
+            "       c.tier, j.location "
+            "FROM jobs j JOIN job_scores s ON s.job_id = j.id "
+            "LEFT JOIN companies c ON j.company_id = c.id "
+            "WHERE j.discovered_date::date = %s AND s.priority = ANY(%s) "
+            "ORDER BY s.match_score DESC, j.id LIMIT %s",
+            (day, priorities, limit),
+        )
+        return list(cur.fetchall())
+
+
 def select_pending(conn, priorities: list[str]) -> list[dict]:
     """Jobs that should be notified: new or score-changed, with an eligible
     priority, that have not yet been notified at their current state."""

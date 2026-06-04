@@ -16,6 +16,8 @@ class ReportingConfig:
     notify_priorities: list[str]
     roles: list[str]
     role_labels: dict[str, str] = field(default_factory=dict)
+    full_list_priorities: list[str] = field(default_factory=lambda: ["HIGH", "MEDIUM"])
+    full_list_limit: int = 1000
 
     def label(self, role: str) -> str:
         return self.role_labels.get(role, role)
@@ -29,4 +31,6 @@ class ReportingConfig:
             notify_priorities=list(data.get("notify_priorities") or ["HIGH", "MEDIUM"]),
             roles=list(data.get("roles") or ["android", "backend", "ai_ml"]),
             role_labels=dict(data.get("role_labels") or {}),
+            full_list_priorities=list(data.get("full_list_priorities") or ["HIGH", "MEDIUM"]),
+            full_list_limit=int(data.get("full_list_limit", 1000)),
         )

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import html
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 
 from jobsearch.reporting.config import ReportingConfig
@@ -26,6 +26,20 @@ class Opportunity:
     priority: str
     url: str
     tier: str | None = None
+    location: str | None = None
+
+
+def _to_opportunity(row, config: ReportingConfig) -> Opportunity:
+    return Opportunity(
+        company=row[0],
+        role=config.label(row[1]),
+        title=row[2],
+        match_score=int(row[3]),
+        priority=row[4],
+        url=row[5],
+        tier=row[6] if len(row) > 6 else None,
+        location=row[7] if len(row) > 7 else None,
+    )
 
 
 @dataclass
@@ -34,6 +48,7 @@ class DailyReport:
     jobs_found_today: int
     roles: list[RoleBreakdown]
     top_opportunities: list[Opportunity]
+    all_matches: list[Opportunity] = field(default_factory=list)
     new_or_updated: int = 0  # populated by the notification service
 
     # ---- builder --------------------------------------------------------
@@ -46,11 +61,13 @@ class DailyReport:
         count_rows: list[tuple[str, str, int]],
         opp_rows: list[tuple],
         config: ReportingConfig,
+        match_rows: list[tuple] | None = None,
     ) -> DailyReport:
         """Assemble a report from raw DB rows (kept pure for testing).
 
         count_rows: (role_category, priority, count)
-        opp_rows:   (company, role_category, title, match_score, priority, url)
+        opp_rows:   (company, role_category, title, match_score, priority, url[, tier])
+        match_rows: full list — same shape plus an optional trailing location
         """
         counts: dict[tuple[str, str], int] = {}
         for role, priority, n in count_rows:
@@ -65,23 +82,12 @@ class DailyReport:
             )
             for r in config.roles
         ]
-        opportunities = [
-            Opportunity(
-                company=row[0],
-                role=config.label(row[1]),
-                title=row[2],
-                match_score=int(row[3]),
-                priority=row[4],
-                url=row[5],
-                tier=row[6] if len(row) > 6 else None,
-            )
-            for row in opp_rows
-        ]
         return cls(
             day=day,
             jobs_found_today=jobs_found_today,
             roles=roles,
-            top_opportunities=opportunities,
+            top_opportunities=[_to_opportunity(r, config) for r in opp_rows],
+            all_matches=[_to_opportunity(r, config) for r in (match_rows or [])],
         )
 
     # ---- renderers ------------------------------------------------------
@@ -107,6 +113,16 @@ class DailyReport:
             tier = f" · {o.tier}" if o.tier else ""
             lines.append(f"  {i}. {o.company} — {o.title} [{o.role}]{tier}")
             lines.append(f"     score {o.match_score} ({o.priority})  {o.url}")
+        if self.all_matches:
+            lines.append("")
+            lines.append(f"All Matches ({len(self.all_matches)}):")
+            for i, o in enumerate(self.all_matches, 1):
+                loc = f" — {o.location}" if o.location else ""
+                lines.append(
+                    f"  {i}. [{o.priority}] {o.match_score}  {o.company} — {o.title} "
+                    f"[{o.role}]{loc}"
+                )
+                lines.append(f"      {o.url}")
         return "\n".join(lines)
 
     def to_markdown(self) -> str:
@@ -150,6 +166,12 @@ class DailyReport:
                 f'{i}. <a href="{e(o.url)}">{e(o.company)} — {e(o.title)}</a> '
                 f"· {o.match_score} ({e(o.priority)})"
             )
+        if self.all_matches:
+            lines.append("")
+            lines.append(
+                f"<b>All {len(self.all_matches)} matches</b> with links are in the email "
+                "and dashboard."
+            )
         return "\n".join(lines)
 
     def to_html(self) -> str:
@@ -165,6 +187,13 @@ class DailyReport:
             f"<td>{o.match_score}</td><td>{e(o.priority)}</td><td>{e(o.tier or '—')}</td></tr>"
             for i, o in enumerate(self.top_opportunities, 1)
         ) or '<tr><td colspan="7">None</td></tr>'
+        all_rows = "".join(
+            f"<tr><td>{i}</td><td>{e(o.company)}</td><td>{e(o.role)}</td>"
+            f'<td><a href="{e(o.url)}">{e(o.title)}</a></td>'
+            f"<td>{e(o.location or '—')}</td><td>{o.match_score}</td>"
+            f"<td>{e(o.priority)}</td><td>{e(o.tier or '—')}</td></tr>"
+            for i, o in enumerate(self.all_matches, 1)
+        ) or '<tr><td colspan="8">None</td></tr>'
         updated = (
             f"<p>New / updated matches: <strong>{self.new_or_updated}</strong></p>"
             if self.new_or_updated
@@ -181,4 +210,8 @@ class DailyReport:
             "<table><thead><tr><th>#</th><th>Company</th><th>Role</th><th>Title</th>"
             f"<th>Score</th><th>Priority</th><th>Tier</th></tr></thead>"
             f"<tbody>{opp_rows}</tbody></table>"
+            f"<h3>All Matches ({len(self.all_matches)})</h3>"
+            "<table><thead><tr><th>#</th><th>Company</th><th>Role</th><th>Title</th>"
+            "<th>Location</th><th>Score</th><th>Priority</th><th>Tier</th></tr></thead>"
+            f"<tbody>{all_rows}</tbody></table>"
         )

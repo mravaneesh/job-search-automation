@@ -70,3 +70,24 @@ def test_dashboard_is_standalone_html():
     assert page.startswith("<!doctype html>")
     assert "Job Search Dashboard" in page
     assert "Jobs Found Today" in page
+
+
+def test_all_matches_full_list_with_links():
+    cfg = ReportingConfig.from_config()
+    match_rows = [
+        ("Airbnb", "android", "Android SWE", 94, "HIGH", "https://x/airbnb", "tier3", "Remote"),
+        ("Amazon", "android", "SDE Android", 90, "HIGH", "https://x/amazon", "tier3", "Bengaluru"),
+        ("Stripe", "backend", "Backend Eng", 70, "MEDIUM", "https://x/stripe", "tier1", "Remote"),
+    ]
+    r = DailyReport.build(date(2026, 6, 4), 50, [("android", "HIGH", 2)], [], cfg,
+                          match_rows=match_rows)
+    assert len(r.all_matches) == 3
+
+    text = r.to_text()
+    assert "All Matches (3)" in text
+    assert "https://x/airbnb" in text and "https://x/amazon" in text and "https://x/stripe" in text
+
+    html = r.to_html()
+    assert "All Matches (3)" in html
+    assert 'href="https://x/stripe"' in html
+    assert "Bengaluru" in html  # location column present
