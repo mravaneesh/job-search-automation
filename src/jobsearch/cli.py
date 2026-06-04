@@ -181,6 +181,15 @@ def _cmd_application_recommend(args, settings) -> int:
     return 0
 
 
+def _cmd_recommend_high(args, settings) -> int:
+    results = ApplicationService(settings).recommend_high_priority(limit=args.limit)
+    print(f"\n=== Prepared recommendations for {len(results)} HIGH-priority job(s) ===")
+    for rec, job in results:
+        print(f"  job {job.job_id:<5} {job.company_name[:18]:<18} "
+              f"{job.title[:30]:<30} score={rec.match_score} -> {rec.strategy}")
+    return 0
+
+
 def _cmd_resume_select(args, settings) -> int:
     out = ApplicationService(settings).select_resume(args.job)
     resume = out["resume"]
@@ -335,6 +344,9 @@ def build_parser() -> argparse.ArgumentParser:
     ar.add_argument("--job", type=int, required=True)
     ar.add_argument("--output")
 
+    rh = sub.add_parser("recommend-high", help="prepare recommendations for all HIGH-priority jobs")
+    rh.add_argument("--limit", type=int, help="cap number of jobs")
+
     rs = sub.add_parser("resume-select", help="select the best resume for a job")
     rs.add_argument("--job", type=int, required=True)
     rs.add_argument("--apply", action="store_true", help="store the selection on the application")
@@ -377,6 +389,7 @@ _COMMANDS = {
     "application-update": _cmd_application_update,
     "application-list": _cmd_application_list,
     "application-recommend": _cmd_application_recommend,
+    "recommend-high": _cmd_recommend_high,
     "resume-select": _cmd_resume_select,
     "generate-cover-letter": _cmd_generate_cover_letter,
     "generate-outreach": _cmd_generate_outreach,

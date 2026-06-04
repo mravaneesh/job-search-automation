@@ -9,7 +9,9 @@ name: Daily Job Search
 
 on:
   schedule:
-    - cron: "0 2 * * *" # 02:00 UTC daily
+    # 09:00 IST == 03:30 UTC. GitHub may delay scheduled runs by a few minutes
+    # under load, so the email can arrive a little after 9. Adjust if needed.
+    - cron: "30 3 * * *"
   workflow_dispatch:
     inputs:
       deploy_pages:
@@ -69,6 +71,13 @@ jobs:
 
       - name: Score
         run: python -m jobsearch score
+
+      - name: Prepare application intelligence
+        run: |
+          python -m jobsearch resumes-sync
+          python -m jobsearch tiers-sync
+          python -m jobsearch salary-backfill
+          python -m jobsearch recommend-high
 
       - name: Build dashboard
         run: python -m jobsearch report --format html --output dashboard/index.html
