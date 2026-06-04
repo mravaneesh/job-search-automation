@@ -4,12 +4,15 @@ from __future__ import annotations
 
 import argparse
 import sys
+from pathlib import Path
 
 from jobsearch.config import load_settings
 from jobsearch.db.migrate import run_migrations
 from jobsearch.logging_config import configure_logging, get_logger
 from jobsearch.pipeline import Pipeline, renormalize
 from jobsearch.registry.loader import load_registry
+from jobsearch.reporting.dashboard import build_dashboard_html
+from jobsearch.reporting.service import ReportingService
 from jobsearch.scoring.service import ScoringService
 
 log = get_logger("cli")
@@ -75,6 +78,48 @@ def _cmd_score(args, settings) -> int:
     return 0
 
 
+def _parse_day(value):
+    from datetime import datetime
+
+    return datetime.strptime(value, "%Y-%m-%d").date() if value else None
+
+
+def _cmd_report(args, settings) -> int:
+    service = ReportingService(settings)
+    report = service.report(day=_parse_day(args.date))
+    if args.output:
+        path = Path(args.output)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        if args.format == "html" or path.suffix == ".html":
+            path.write_text(build_dashboard_html(report))
+        elif args.format == "markdown":
+            path.write_text(report.to_markdown())
+        else:
+            path.write_text(report.to_text())
+        log.info("report_written", path=str(path))
+    else:
+        rendered = {"markdown": report.to_markdown, "html": report.to_html}.get(
+            args.format, report.to_text
+        )()
+        print(rendered)
+    return 0
+
+
+def _cmd_notify(args, settings) -> int:
+    service = ReportingService(settings)
+    summary = service.notify(
+        day=_parse_day(args.date),
+        dry_run=args.dry_run,
+        only_channels=set(args.channel) if args.channel else None,
+    )
+    print("\n=== Notification summary ===")
+    print(f"  pending (new/changed): {summary.pending}")
+    print(f"  sent:    {summary.sent_channels or '(none)'}")
+    print(f"  skipped: {summary.skipped_channels or '(none)'}")
+    print(f"  marked notified: {summary.marked}")
+    return 0
+
+
 def _cmd_renormalize(_args, settings) -> int:
     updated = renormalize(settings)
     log.info("renormalized", updated=updated)
@@ -114,6 +159,20 @@ def build_parser() -> argparse.ArgumentParser:
     score.add_argument("--llm", action="store_true", help="force-enable LLM refinement")
     score.add_argument("--no-llm", action="store_true", help="force-disable LLM refinement")
 
+    report = sub.add_parser("report", help="build the daily report / dashboard")
+    report.add_argument("--date", help="report date YYYY-MM-DD (default: today, UTC)")
+    report.add_argument(
+        "--format", choices=["text", "markdown", "html"], default="text", help="output format"
+    )
+    report.add_argument("--output", help="write to this file (e.g. dashboard/index.html)")
+
+    notify = sub.add_parser("notify", help="send notifications for new/changed matches")
+    notify.add_argument("--date", help="report date YYYY-MM-DD (default: today, UTC)")
+    notify.add_argument("--dry-run", action="store_true", help="resolve pending but do not send")
+    notify.add_argument(
+        "--channel", action="append", help="limit to a channel: telegram / email (repeatable)"
+    )
+
     sub.add_parser("renormalize", help="re-run normalization over stored raw payloads")
     sub.add_parser("list-targets", help="print the registry coverage map")
     return parser
@@ -123,6 +182,8 @@ _COMMANDS = {
     "migrate": _cmd_migrate,
     "collect": _cmd_collect,
     "score": _cmd_score,
+    "report": _cmd_report,
+    "notify": _cmd_notify,
     "renormalize": _cmd_renormalize,
     "list-targets": _cmd_list_targets,
 }

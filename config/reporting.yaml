@@ -1,0 +1,22 @@
+# Reporting / notification behaviour. Channel credentials come from environment
+# variables (secrets), not from this file.
+
+# Number of jobs shown in the "Top Opportunities" section.
+top_opportunities: 10
+
+# A job is eligible for notification (when new or score-changed) only if its
+# priority is in this set. This implements "notify only for new jobs, score
+# changes, and high-priority matches".
+notify_priorities:
+  - HIGH
+  - MEDIUM
+
+# Roles to break down in the report, in display order, with labels.
+roles:
+  - android
+  - backend
+  - ai_ml
+role_labels:
+  android: Android
+  backend: Backend
+  ai_ml: AI/ML

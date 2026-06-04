@@ -221,3 +221,57 @@ for the cheapest option if you enable the LLM at high volume.
 4. `python -m jobsearch score` to score the existing backlog.
 5. (Optional) set `ANTHROPIC_API_KEY`, flip `use_llm: true`, and run
    `python -m jobsearch score --llm`.
+
+---
+
+# Phase 3 — Daily Automation & Reporting
+
+Runs the whole pipeline on a schedule and tells you what's new.
+
+```
+(GitHub Actions cron) → migrate → collect → score → report (dashboard) → notify
+```
+
+## Daily report
+
+`python -m jobsearch report` produces, for **jobs found today**:
+
+- per-role **High Match** / **Medium Match** counts (Android, Backend, AI/ML)
+- **Top Opportunities** — company, role, match score, URL
+
+Render it as `text` (default), `markdown`, or a standalone HTML **dashboard**:
+
+```bash
+python -m jobsearch report                                   # text to stdout
+python -m jobsearch report --format html --output dashboard/index.html
+```
+
+## Notifications (Telegram + Email)
+
+`python -m jobsearch notify` sends the report through every configured channel.
+Channels are configured by environment variables and **skip silently when
+unset**, so the pipeline never fails on a missing secret.
+
+**Deduplicated by design.** A job is notified only when it is **new** or its
+**score changed**, and only at HIGH/MEDIUM priority (configurable). After a
+successful send the state is recorded in the `notifications` table, so the same
+match is **never sent twice**. `--dry-run` shows what would be sent without
+sending or marking; `--channel telegram` limits to one channel.
+
+| Channel | Env vars |
+|---|---|
+| Telegram | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` |
+| Email (SMTP) | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_USE_TLS`, `EMAIL_FROM`, `EMAIL_TO` |
+
+## Scheduling (GitHub Actions)
+
+`.github/workflows/daily.yml` runs everything daily at 02:00 UTC (and on demand
+via *Run workflow*). It uploads the dashboard as an artifact and can publish it
+to GitHub Pages. **It requires a persistent `DATABASE_URL` secret** — the dedup
+state must survive between runs. Full setup (secrets, Telegram bot, SMTP, Pages)
+is in **[DEPLOYMENT.md](DEPLOYMENT.md)**.
+
+## Tuning (no code changes)
+
+`config/reporting.yaml` — `top_opportunities`, `notify_priorities`, and the role
+labels shown in the report.
