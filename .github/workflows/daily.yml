@@ -80,10 +80,10 @@ jobs:
           python -m jobsearch recommend-high
 
       - name: Build dashboard
-        run: python -m jobsearch report --format html --output dashboard/index.html
+        run: python -m jobsearch report --format html --output dashboard/index.html --days 3
 
-      - name: Notify (new / changed / high-priority only)
-        run: python -m jobsearch notify
+      - name: Notify (daily digest; always emails, highlights what's new)
+        run: python -m jobsearch notify --always --days 3
 
       - name: Upload dashboard artifact
         uses: actions/upload-artifact@v4

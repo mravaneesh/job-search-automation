@@ -50,6 +50,13 @@ class DailyReport:
     top_opportunities: list[Opportunity]
     all_matches: list[Opportunity] = field(default_factory=list)
     new_or_updated: int = 0  # populated by the notification service
+    window_days: int = 1
+
+    @property
+    def found_label(self) -> str:
+        if self.window_days <= 1:
+            return "Jobs Found Today"
+        return f"Jobs Found (last {self.window_days} days)"
 
     # ---- builder --------------------------------------------------------
 
@@ -62,6 +69,7 @@ class DailyReport:
         opp_rows: list[tuple],
         config: ReportingConfig,
         match_rows: list[tuple] | None = None,
+        window_days: int = 1,
     ) -> DailyReport:
         """Assemble a report from raw DB rows (kept pure for testing).
 
@@ -88,6 +96,7 @@ class DailyReport:
             roles=roles,
             top_opportunities=[_to_opportunity(r, config) for r in opp_rows],
             all_matches=[_to_opportunity(r, config) for r in (match_rows or [])],
+            window_days=window_days,
         )
 
     # ---- renderers ------------------------------------------------------
@@ -96,7 +105,7 @@ class DailyReport:
         lines = [
             f"Job Search — Daily Report ({self.day.isoformat()})",
             "=" * 44,
-            f"Jobs Found Today: {self.jobs_found_today}",
+            f"{self.found_label}: {self.jobs_found_today}",
         ]
         if self.new_or_updated:
             lines.append(f"New / updated matches: {self.new_or_updated}")
@@ -128,7 +137,7 @@ class DailyReport:
     def to_markdown(self) -> str:
         lines = [
             f"*Job Search — Daily Report ({self.day.isoformat()})*",
-            f"*Jobs Found Today:* {self.jobs_found_today}",
+            f"*{self.found_label}:* {self.jobs_found_today}",
         ]
         if self.new_or_updated:
             lines.append(f"*New / updated matches:* {self.new_or_updated}")
@@ -150,7 +159,7 @@ class DailyReport:
         e = html.escape
         lines = [
             f"<b>Job Search — Daily Report ({self.day.isoformat()})</b>",
-            f"Jobs Found Today: <b>{self.jobs_found_today}</b>",
+            f"{self.found_label}: <b>{self.jobs_found_today}</b>",
         ]
         if self.new_or_updated:
             lines.append(f"New / updated matches: <b>{self.new_or_updated}</b>")
@@ -201,7 +210,7 @@ class DailyReport:
         )
         return (
             f"<h2>Job Search — Daily Report ({self.day.isoformat()})</h2>"
-            f"<p>Jobs Found Today: <strong>{self.jobs_found_today}</strong></p>"
+            f"<p>{self.found_label}: <strong>{self.jobs_found_today}</strong></p>"
             f"{updated}"
             "<h3>By role</h3>"
             "<table><thead><tr><th>Role</th><th>High Match</th><th>Medium Match</th>"

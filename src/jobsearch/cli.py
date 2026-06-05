@@ -99,7 +99,7 @@ def _parse_day(value):
 
 def _cmd_report(args, settings) -> int:
     service = ReportingService(settings)
-    report = service.report(day=_parse_day(args.date))
+    report = service.report(day=_parse_day(args.date), days=args.days)
     if args.output:
         path = Path(args.output)
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -122,7 +122,9 @@ def _cmd_notify(args, settings) -> int:
     service = ReportingService(settings)
     summary = service.notify(
         day=_parse_day(args.date),
+        days=args.days,
         dry_run=args.dry_run,
+        always=args.always,
         only_channels=set(args.channel) if args.channel else None,
     )
     print("\n=== Notification summary ===")
@@ -314,10 +316,20 @@ def build_parser() -> argparse.ArgumentParser:
         "--format", choices=["text", "markdown", "html"], default="text", help="output format"
     )
     report.add_argument("--output", help="write to this file (e.g. dashboard/index.html)")
+    report.add_argument(
+        "--days", type=int, default=1, help="include jobs from the last N days (default 1)"
+    )
 
     notify = sub.add_parser("notify", help="send notifications for new/changed matches")
     notify.add_argument("--date", help="report date YYYY-MM-DD (default: today, UTC)")
     notify.add_argument("--dry-run", action="store_true", help="resolve pending but do not send")
+    notify.add_argument(
+        "--always", action="store_true",
+        help="send the digest even when nothing is new (e.g. a daily morning email)",
+    )
+    notify.add_argument(
+        "--days", type=int, default=1, help="include jobs from the last N days (default 1)"
+    )
     notify.add_argument(
         "--channel", action="append", help="limit to a channel: telegram / email (repeatable)"
     )

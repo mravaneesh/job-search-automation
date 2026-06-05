@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 
 from jobsearch.config import Settings
 from jobsearch.db.connection import connect
@@ -20,14 +20,18 @@ def _today() -> date:
     return datetime.now(UTC).date()
 
 
-def build_daily_report(conn, day: date, config: ReportingConfig) -> DailyReport:
+def build_daily_report(conn, day: date, config: ReportingConfig, days: int = 1) -> DailyReport:
+    since = day - timedelta(days=max(1, days) - 1)
     return DailyReport.build(
         day=day,
-        jobs_found_today=repo.count_jobs_found_today(conn, day),
-        count_rows=repo.role_priority_counts(conn, day),
-        opp_rows=repo.top_opportunities(conn, day, config.top_opportunities),
-        match_rows=repo.all_matches(conn, day, config.full_list_priorities, config.full_list_limit),
+        jobs_found_today=repo.count_jobs_found_today(conn, day, since),
+        count_rows=repo.role_priority_counts(conn, day, since),
+        opp_rows=repo.top_opportunities(conn, day, config.top_opportunities, since),
+        match_rows=repo.all_matches(
+            conn, day, config.full_list_priorities, config.full_list_limit, since
+        ),
         config=config,
+        window_days=max(1, days),
     )
 
 
@@ -44,34 +48,43 @@ class ReportingService:
         self._settings = settings
         self._config = config or ReportingConfig.from_config()
 
-    def report(self, day: date | None = None) -> DailyReport:
+    def report(self, day: date | None = None, days: int = 1) -> DailyReport:
         day = day or _today()
         with connect(self._settings.database_url) as conn:
-            return build_daily_report(conn, day, self._config)
+            return build_daily_report(conn, day, self._config, days)
 
     def notify(
         self,
         *,
         day: date | None = None,
+        days: int = 1,
         dry_run: bool = False,
+        always: bool = False,
         only_channels: set[str] | None = None,
     ) -> NotifySummary:
         day = day or _today()
         summary = NotifySummary()
 
         with connect(self._settings.database_url) as conn:
-            report = build_daily_report(conn, day, self._config)
+            report = build_daily_report(conn, day, self._config, days)
             pending = repo.select_pending(conn, self._config.notify_priorities)
             report.new_or_updated = len(pending)
             summary.pending = len(pending)
 
-            # Avoid duplicate / empty notifications: only send when something is new.
-            if not pending:
+            # By default avoid duplicate / empty notifications: only send when
+            # something is new. With `always`, send the digest regardless (e.g. a
+            # scheduled morning email) — still marking the new ones as notified.
+            if not pending and not always:
                 log.info("notify_nothing_pending", day=day.isoformat())
                 return summary
 
+            if pending:
+                subject = f"[Job Search] {len(pending)} new/updated matches — {day.isoformat()}"
+            else:
+                subject = f"[Job Search] daily digest (no new matches) — {day.isoformat()}"
+
             message = Message(
-                subject=f"[Job Search] {len(pending)} new/updated matches — {day.isoformat()}",
+                subject=subject,
                 text=report.to_text(),
                 html=report.to_html(),
                 telegram_html=report.to_telegram_html(),

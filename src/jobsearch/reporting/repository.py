@@ -10,54 +10,61 @@ def notification_fingerprint(priority: str, match_score: int) -> str:
     return f"{priority}:{match_score}"
 
 
-def count_jobs_found_today(conn, day: date) -> int:
+def count_jobs_found_today(conn, day: date, since: date | None = None) -> int:
+    since = since or day
     with conn.cursor() as cur:
         cur.execute(
-            "SELECT count(*) FROM jobs WHERE discovered_date::date = %s", (day,)
+            "SELECT count(*) FROM jobs WHERE discovered_date::date BETWEEN %s AND %s",
+            (since, day),
         )
         return int(cur.fetchone()[0])
 
 
-def role_priority_counts(conn, day: date) -> list[tuple[str, str, int]]:
-    """(role_category, priority, count) for jobs discovered on ``day``."""
+def role_priority_counts(conn, day: date, since: date | None = None) -> list[tuple[str, str, int]]:
+    """(role_category, priority, count) for jobs discovered in [since, day]."""
+    since = since or day
     with conn.cursor() as cur:
         cur.execute(
             "SELECT j.role_category, s.priority, count(*) "
             "FROM jobs j JOIN job_scores s ON s.job_id = j.id "
-            "WHERE j.discovered_date::date = %s "
+            "WHERE j.discovered_date::date BETWEEN %s AND %s "
             "GROUP BY j.role_category, s.priority",
-            (day,),
+            (since, day),
         )
         return [(r[0], r[1], int(r[2])) for r in cur.fetchall()]
 
 
-def top_opportunities(conn, day: date, limit: int) -> list[tuple]:
-    """Highest-scoring HIGH/MEDIUM jobs discovered on ``day``."""
+def top_opportunities(conn, day: date, limit: int, since: date | None = None) -> list[tuple]:
+    """Highest-scoring HIGH/MEDIUM jobs discovered in [since, day]."""
+    since = since or day
     with conn.cursor() as cur:
         cur.execute(
             "SELECT j.company_name, j.role_category, j.title, s.match_score, s.priority, j.url, "
             "       c.tier "
             "FROM jobs j JOIN job_scores s ON s.job_id = j.id "
             "LEFT JOIN companies c ON j.company_id = c.id "
-            "WHERE j.discovered_date::date = %s AND s.priority IN ('HIGH','MEDIUM') "
+            "WHERE j.discovered_date::date BETWEEN %s AND %s AND s.priority IN ('HIGH','MEDIUM') "
             "ORDER BY s.match_score DESC, j.id LIMIT %s",
-            (day, limit),
+            (since, day, limit),
         )
         return list(cur.fetchall())
 
 
-def all_matches(conn, day: date, priorities: list[str], limit: int) -> list[tuple]:
-    """Every job discovered on ``day`` with a score in ``priorities`` — the full
-    list (company, role, title, score, priority, url, tier, location)."""
+def all_matches(
+    conn, day: date, priorities: list[str], limit: int, since: date | None = None
+) -> list[tuple]:
+    """Every job discovered in [since, day] with a score in ``priorities`` — the
+    full list (company, role, title, score, priority, url, tier, location)."""
+    since = since or day
     with conn.cursor() as cur:
         cur.execute(
             "SELECT j.company_name, j.role_category, j.title, s.match_score, s.priority, j.url, "
             "       c.tier, j.location "
             "FROM jobs j JOIN job_scores s ON s.job_id = j.id "
             "LEFT JOIN companies c ON j.company_id = c.id "
-            "WHERE j.discovered_date::date = %s AND s.priority = ANY(%s) "
+            "WHERE j.discovered_date::date BETWEEN %s AND %s AND s.priority = ANY(%s) "
             "ORDER BY s.match_score DESC, j.id LIMIT %s",
-            (day, priorities, limit),
+            (since, day, priorities, limit),
         )
         return list(cur.fetchall())
 

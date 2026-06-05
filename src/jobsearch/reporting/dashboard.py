@@ -39,7 +39,7 @@ def build_dashboard_html(report: DailyReport) -> str:
         f'<p class="meta">Report for {report.day.isoformat()} · generated {generated}</p>'
         '<div class="cards">'
         f'<div class="card"><div class="n">{report.jobs_found_today}</div>'
-        "<div>Jobs Found Today</div></div>"
+        f"<div>{report.found_label}</div></div>"
         f"{cards}</div>"
         f"{report.to_html()}"
         "</body></html>"
