@@ -2,13 +2,23 @@ import type { Priority, RoleCategory } from "./types";
 
 export const ROLE_LABELS: Record<RoleCategory, string> = {
   android: "Android",
+  ios: "iOS",
+  frontend: "Frontend",
+  fullstack: "Full Stack",
   backend: "Backend",
+  devops: "DevOps",
+  data_engineering: "Data Eng",
   ai_ml: "AI/ML",
 };
 
 export const ROLE_COLORS: Record<RoleCategory, string> = {
   android: "#34d399", // emerald
+  ios: "#60a5fa", // blue
+  frontend: "#f472b6", // pink
+  fullstack: "#fb923c", // orange
   backend: "#38bdf8", // sky
+  devops: "#2dd4bf", // teal
+  data_engineering: "#facc15", // amber
   ai_ml: "#a78bfa", // violet
 };
 

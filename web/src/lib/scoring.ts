@@ -62,7 +62,9 @@ const WEIGHTS = {
   interview: 0.25,
 };
 const THRESH = { high: 75, medium: 55 };
-const ROLE_FACTORS = [1.0, 0.9, 0.78];
+// Primary / secondary / tertiary target roles get a decreasing multiplier.
+const ROLE_FACTORS = [1.0, 0.92, 0.85, 0.8];
+const ROLE_FACTOR_REST = 0.75;
 const COMPANY_QUALITY: Record<string, number> = {
   global: 100,
   ai: 95,
@@ -110,8 +112,15 @@ const clamp = (v: number) => Math.max(0, Math.min(100, Math.round(v)));
 
 export function parseRequiredYears(text: string | null): number | null {
   if (!text) return null;
-  const m = text.match(/(\d{1,2})\s*\+?\s*(?:-\s*\d{1,2}\s*)?(?:years?|yrs?)/i);
+  const m = text.match(
+    /(\d{1,2})\s*\+?\s*(?:(?:-|to|–|—)\s*\d{1,2}\s*)?(?:years?|yrs?)/i,
+  );
   return m ? Number(m[1]) : null;
+}
+
+// Required years from the parsed experience field, else from the description.
+function requiredYears(job: JobRow): number | null {
+  return parseRequiredYears(job.experience) ?? parseRequiredYears(job.description);
 }
 
 function seniorityLabel(title: string): string | null {
@@ -137,7 +146,7 @@ export function scoreJob(job: JobRow, profile: Profile): Scored {
 
   // experience
   let experience = 60;
-  const reqYears = parseRequiredYears(job.experience);
+  const reqYears = requiredYears(job);
   if (reqYears != null) {
     const diff = reqYears - profile.experienceYears;
     experience = diff <= 0 ? 100 : clamp(100 - diff * 20);
@@ -176,7 +185,8 @@ export function scoreJob(job: JobRow, profile: Profile): Scored {
     WEIGHTS.interview * interview;
 
   const roleIdx = profile.targetRoles.indexOf(job.role_category);
-  const factor = roleIdx >= 0 ? (ROLE_FACTORS[roleIdx] ?? 0.7) : 0.7;
+  const factor =
+    roleIdx >= 0 ? (ROLE_FACTORS[roleIdx] ?? ROLE_FACTOR_REST) : ROLE_FACTOR_REST;
   const match_score = clamp(raw * factor);
   const priority: Priority =
     match_score >= THRESH.high ? "HIGH" : match_score >= THRESH.medium ? "MEDIUM" : "LOW";
@@ -205,8 +215,8 @@ export function passesProfileFilter(job: JobRow, profile: Profile): boolean {
     if (!loc.includes("remote") && !loc.includes("anywhere")) return false;
   }
 
-  // Too senior for the candidate's experience.
-  const req = parseRequiredYears(job.experience);
+  // Too senior for the candidate's experience (from the field or the JD text).
+  const req = requiredYears(job);
   if (req != null && req > profile.experienceYears + 3) return false;
   if (profile.experienceYears < 6) {
     const label = seniorityLabel(job.title);

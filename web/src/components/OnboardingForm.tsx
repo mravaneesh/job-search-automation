@@ -7,13 +7,20 @@ import type { Profile } from "@/lib/scoring";
 
 const ROLES = [
   { v: "android", label: "Android" },
+  { v: "ios", label: "iOS" },
+  { v: "frontend", label: "Frontend" },
+  { v: "fullstack", label: "Full Stack" },
   { v: "backend", label: "Backend" },
+  { v: "devops", label: "DevOps" },
+  { v: "data_engineering", label: "Data Eng" },
   { v: "ai_ml", label: "AI/ML" },
 ];
 const SKILL_SUGGEST = [
-  "Kotlin", "Java", "Android SDK", "Jetpack Compose", "Coroutines",
+  "Kotlin", "Java", "Android SDK", "Jetpack Compose", "Swift", "SwiftUI",
+  "React", "TypeScript", "Next.js", "Node.js", "Angular", "Vue",
   "Spring", "PostgreSQL", "MySQL", "REST", "gRPC", "Microservices",
-  "Python", "PyTorch", "LLM", "NLP", "RAG", "AI Agents", "Docker", "Kubernetes",
+  "Docker", "Kubernetes", "AWS", "Terraform", "CI/CD",
+  "Python", "PyTorch", "LLM", "NLP", "RAG", "Spark", "Airflow",
 ];
 const LOCATION_SUGGEST = [
   "Bengaluru", "Hyderabad", "Pune", "Mumbai", "Delhi", "Gurgaon",

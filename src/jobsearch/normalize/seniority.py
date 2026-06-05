@@ -17,8 +17,10 @@ import yaml
 
 from jobsearch.config import CONFIG_DIR
 
-# Min years from "5+ years", "5-8 years", "5 yrs" — we take the lower bound.
-_YEARS = re.compile(r"(\d{1,2})\s*\+?\s*(?:-\s*\d{1,2}\s*)?(?:years?|yrs?)", re.IGNORECASE)
+# Min years from "5+ years", "5-8 years", "5 to 8 years", "5 yrs" — lower bound.
+_YEARS = re.compile(
+    r"(\d{1,2})\s*\+?\s*(?:(?:-|to|–|—)\s*\d{1,2}\s*)?(?:years?|yrs?)", re.IGNORECASE
+)
 
 
 def _compile(keywords: list[str]) -> list[re.Pattern[str]]:

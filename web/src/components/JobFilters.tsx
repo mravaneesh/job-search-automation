@@ -7,7 +7,12 @@ import { Search, X } from "lucide-react";
 const ROLES = [
   { v: "", label: "All roles" },
   { v: "android", label: "Android" },
+  { v: "ios", label: "iOS" },
+  { v: "frontend", label: "Frontend" },
+  { v: "fullstack", label: "Full Stack" },
   { v: "backend", label: "Backend" },
+  { v: "devops", label: "DevOps" },
+  { v: "data_engineering", label: "Data Eng" },
   { v: "ai_ml", label: "AI/ML" },
 ];
 const PRIORITIES = [

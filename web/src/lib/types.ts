@@ -1,5 +1,13 @@
 export type Priority = "HIGH" | "MEDIUM" | "LOW";
-export type RoleCategory = "android" | "backend" | "ai_ml";
+export type RoleCategory =
+  | "android"
+  | "ios"
+  | "frontend"
+  | "fullstack"
+  | "backend"
+  | "devops"
+  | "data_engineering"
+  | "ai_ml";
 
 export interface JobListItem {
   id: number;

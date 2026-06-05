@@ -2,11 +2,11 @@
 #
 # A posting is assigned the FIRST role (in this order) whose keywords match the
 # title; if no title match, the description is checked. Postings matching none
-# of the three target roles are DROPPED. Matching is case-insensitive on word
+# of the target roles are DROPPED. Matching is case-insensitive on word
 # boundaries. Precision is favoured over recall: a generic "Software Engineer"
 # with no role-specific signal is intentionally not collected.
 
-priority: [android, ai_ml, backend]
+priority: [ios, android, fullstack, frontend, devops, data_engineering, ai_ml, backend]
 
 roles:
   android:
@@ -16,6 +16,69 @@ roles:
       - android
       - jetpack compose
       - kotlin multiplatform
+
+  ios:
+    title_keywords:
+      - ios
+      - swift developer
+      - swiftui
+    description_keywords:
+      - swiftui
+      - ios sdk
+
+  frontend:
+    title_keywords:
+      - frontend
+      - front-end
+      - front end
+      - ui engineer
+      - react developer
+      - angular developer
+      - vue developer
+      - web developer
+      - javascript developer
+    description_keywords:
+      - react.js
+      - frontend engineer
+      - single-page application
+
+  fullstack:
+    title_keywords:
+      - full stack
+      - full-stack
+      - fullstack
+      - mern
+      - mean stack
+    description_keywords:
+      - full stack
+      - full-stack
+
+  devops:
+    title_keywords:
+      - devops
+      - sre
+      - site reliability
+      - infrastructure engineer
+      - platform engineer
+      - cloud engineer
+      - kubernetes
+    description_keywords:
+      - site reliability
+      - kubernetes
+      - terraform
+      - ci/cd pipeline
+
+  data_engineering:
+    title_keywords:
+      - data engineer
+      - data engineering
+      - etl developer
+      - big data
+      - spark engineer
+    description_keywords:
+      - data pipeline
+      - apache spark
+      - data warehouse
 
   ai_ml:
     title_keywords:
@@ -44,7 +107,6 @@ roles:
       - back end
       - server-side
       - distributed systems
-      - platform engineer
       - api engineer
       - microservices
     description_keywords:

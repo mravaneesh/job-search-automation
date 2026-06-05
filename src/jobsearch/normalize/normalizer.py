@@ -29,7 +29,9 @@ SOURCE_PRIORITY = {
     "naukri": 80,
 }
 
-_YEARS = re.compile(r"(\d{1,2})\s*\+?\s*(?:-\s*\d{1,2}\s*)?(?:years?|yrs?)", re.IGNORECASE)
+_YEARS = re.compile(
+    r"(\d{1,2})\s*\+?\s*(?:(?:-|to|–|—)\s*\d{1,2}\s*)?(?:years?|yrs?)", re.IGNORECASE
+)
 _SENIORITY = [
     ("intern", "Internship"),
     ("principal", "Principal"),
