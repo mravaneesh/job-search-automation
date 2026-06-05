@@ -1,0 +1,73 @@
+# Location filter — keep a posting only if it is in India OR remote-eligible.
+# Applied during normalization (deterministic, no LLM). Foreign on-site roles
+# are dropped before they are ever scored or stored.
+#
+# Matching is word-boundary + case-insensitive, so "IND" matches but
+# "Indiana"/"Indonesia" do not.
+
+enabled: true
+
+# How strict the remote rule is:
+#   any   -> keep every remote role (e.g. "Remote - USA").
+#   india -> keep a remote role only when it is global/anywhere or not tied to a
+#            specific foreign geography ("Remote - USA"/"Remote, Brazil" dropped;
+#            "Remote", "Anywhere", "Remote - India" kept).
+remote_scope: india
+
+# Keep the posting if the location text contains any of these (treated remote).
+remote_keywords:
+  - remote
+  - anywhere
+  - work from home
+  - wfh
+  - distributed
+  - remote-friendly
+  - remote friendly
+
+# Under remote_scope: india these count as "remote anywhere" and are always kept.
+global_remote_keywords:
+  - anywhere
+  - worldwide
+  - global
+
+# Under remote_scope: india, words here are not treated as a foreign geography
+# (so "Fully Remote", "Remote (preferred)" still count as remote-anywhere).
+remote_noise_words:
+  - fully
+  - only
+  - first
+  - based
+  - eligible
+  - optional
+  - preferred
+  - flexible
+
+# Keep the posting if the location text contains any of these (treated India):
+# country name, common tech metros, and the ISO country code.
+india_keywords:
+  - india
+  - "ind"            # e.g. Amazon's "Bengaluru, Karnataka, IND"
+  - bengaluru
+  - bangalore
+  - hyderabad
+  - pune
+  - mumbai
+  - delhi
+  - "new delhi"
+  - gurgaon
+  - gurugram
+  - noida
+  - chennai
+  - kolkata
+  - ahmedabad
+  - jaipur
+  - chandigarh
+  - kochi
+  - coimbatore
+  - indore
+  - thiruvananthapuram
+  - trivandrum
+
+# When a posting has no usable location (empty / "N/A"), keep it.
+# Set to false to be strict and drop anything not clearly India-or-remote.
+keep_unknown_location: true

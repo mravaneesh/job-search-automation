@@ -114,7 +114,7 @@ companies:
     category: unicorn
     source: lever
     token: cred
-    status: pending
+    status: implemented
   - name: Groww
     category: unicorn
     source: lever
@@ -124,7 +124,7 @@ companies:
     category: unicorn
     source: lever
     token: meesho
-    status: pending
+    status: implemented
   - name: Zepto
     category: unicorn
     source: career_page
@@ -143,14 +143,14 @@ companies:
     category: unicorn
     source: lever
     token: porter
-    status: pending
+    status: implemented
 
   # ---------- AI ----------
   - name: OpenAI
     category: ai
     source: ashby
     token: openai
-    status: pending
+    status: implemented
   - name: Anthropic
     category: ai
     source: greenhouse
@@ -160,12 +160,12 @@ companies:
     category: ai
     source: ashby
     token: perplexity
-    status: pending
+    status: implemented
   - name: Cohere
     category: ai
     source: ashby
     token: cohere
-    status: pending
+    status: implemented
   - name: Sarvam AI
     category: ai
     source: career_page
@@ -200,17 +200,17 @@ companies:
     category: backend
     source: greenhouse
     token: mongodb
-    status: pending
+    status: implemented
   - name: Elastic
     category: backend
     source: greenhouse
     token: elastic
-    status: pending
+    status: implemented
   - name: Rubrik
     category: backend
     source: greenhouse
     token: rubrik
-    status: pending
+    status: implemented
 
 # Aggregator search targets (Playwright-based, deterministic DOM extraction).
 # These are searched by role query, not per-company. Marked pending because

@@ -10,6 +10,7 @@ import re
 
 from jobsearch.dedup.deduper import fingerprint
 from jobsearch.models import Job, RawJob
+from jobsearch.normalize.locations import LocationFilter
 from jobsearch.normalize.roles import RoleClassifier
 from jobsearch.normalize.skills import SkillExtractor
 from jobsearch.normalize.text import html_to_text
@@ -61,19 +62,33 @@ def parse_experience(title: str, description: str | None) -> str | None:
 
 
 class Normalizer:
-    def __init__(self, classifier: RoleClassifier, skills: SkillExtractor):
+    def __init__(
+        self,
+        classifier: RoleClassifier,
+        skills: SkillExtractor,
+        location_filter: LocationFilter | None = None,
+    ):
         self._classifier = classifier
         self._skills = skills
+        self._locations = location_filter or LocationFilter.from_config()
 
     @classmethod
     def default(cls) -> Normalizer:
-        return cls(RoleClassifier.from_config(), SkillExtractor.from_config())
+        return cls(
+            RoleClassifier.from_config(),
+            SkillExtractor.from_config(),
+            LocationFilter.from_config(),
+        )
 
     def normalize(self, raw: RawJob) -> Job | None:
         description = raw.description_text or html_to_text(raw.description_html)
 
         role = self._classifier.classify(raw.title, description)
         if role is None:
+            return None
+
+        # India-or-remote policy (config/locations.yaml): drop foreign on-site.
+        if not self._locations.keep(raw.location):
             return None
 
         skills = self._skills.extract(description)
