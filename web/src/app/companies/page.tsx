@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { getCompanies } from "@/lib/queries";
+import { getCompaniesForProfile } from "@/lib/queries";
+import { requireProfile } from "@/lib/profile";
 import { Chip, PageHeader } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +12,8 @@ const TIER_TONE: Record<string, string> = {
 };
 
 export default async function CompaniesPage() {
-  const companies = await getCompanies();
+  const { user, profile } = await requireProfile();
+  const companies = await getCompaniesForProfile(profile, user.id);
   const totalRoles = companies.reduce((s, c) => s + c.total, 0);
 
   return (

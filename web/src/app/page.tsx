@@ -1,5 +1,6 @@
 import { Briefcase, CalendarPlus, Building2, Sparkles, Target } from "lucide-react";
-import { getOverviewStats } from "@/lib/queries";
+import { getOverviewForProfile } from "@/lib/queries";
+import { requireProfile } from "@/lib/profile";
 import { StatCard } from "@/components/StatCard";
 import { PageHeader } from "@/components/ui";
 import {
@@ -34,15 +35,17 @@ function ChartCard({
 }
 
 export default async function OverviewPage() {
-  const stats = await getOverviewStats();
+  const { user, profile } = await requireProfile();
+  const stats = await getOverviewForProfile(profile, user.id);
   const high = stats.byPriority.find((p) => p.priority === "HIGH")?.count ?? 0;
   const medium = stats.byPriority.find((p) => p.priority === "MEDIUM")?.count ?? 0;
+  const firstName = (profile.fullName ?? user.name ?? "there").split(" ")[0];
 
   return (
     <>
       <PageHeader
-        title="Overview"
-        subtitle="Live snapshot of collected, scored India & remote roles."
+        title={`Welcome back, ${firstName}`}
+        subtitle="Jobs matched to your profile across India & remote."
       />
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">

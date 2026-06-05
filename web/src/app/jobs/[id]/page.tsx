@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink } from "lucide-react";
-import { getJob } from "@/lib/queries";
+import { getJobDetail } from "@/lib/queries";
+import { requireProfile } from "@/lib/profile";
 import { StatusControl } from "@/components/StatusControl";
 import { Chip, PriorityBadge, RoleBadge, ScorePill } from "@/components/ui";
 import { formatDate, formatSalary, scoreColor } from "@/lib/format";
@@ -61,7 +62,8 @@ export default async function JobDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const job = await getJob(Number(id));
+  const { user, profile } = await requireProfile();
+  const job = await getJobDetail(profile, user.id, Number(id));
   if (!job) notFound();
 
   const salary = formatSalary(job.salary_min, job.salary_max, job.currency);
@@ -169,11 +171,9 @@ export default async function JobDetailPage({
                   <Bar key={d.key} label={d.label} value={job[d.key]} />
                 ))}
               </div>
-              {job.scored_by && (
-                <p className="mt-4 text-xs text-[var(--muted)]">
-                  Scored by {job.scored_by}
-                </p>
-              )}
+              <p className="mt-4 text-xs text-[var(--muted)]">
+                Scored against your profile
+              </p>
             </section>
           )}
 

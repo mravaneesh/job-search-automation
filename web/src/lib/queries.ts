@@ -1,104 +1,52 @@
 import "server-only";
 import { query, queryOne } from "./db";
+import {
+  passesProfileFilter,
+  scoreJob,
+  type JobRow,
+  type Profile,
+  type Scored,
+} from "./scoring";
 import type {
   ApplicationCard,
   CompanyRow,
-  JobDetail,
   JobFacets,
-  JobListItem,
   OverviewStats,
+  Priority,
+  RoleCategory,
 } from "./types";
 
-export async function getOverviewStats(): Promise<OverviewStats> {
-  const [
-    totals,
-    byPriority,
-    byRole,
-    bySource,
-    topCompanies,
-    scoreBuckets,
-    discoveries,
-  ] = await Promise.all([
-    queryOne<{
-      total_open: number;
-      new_today: number;
-      companies: number;
-      scored: number;
-      high_medium: number;
-    }>(`
-      SELECT
-        count(*) FILTER (WHERE j.status = 'open')::int AS total_open,
-        count(*) FILTER (WHERE j.discovered_date::date = current_date)::int AS new_today,
-        count(DISTINCT j.company_name)::int AS companies,
-        (SELECT count(*) FROM job_scores)::int AS scored,
-        (SELECT count(*) FROM job_scores WHERE priority IN ('HIGH','MEDIUM'))::int AS high_medium
-      FROM jobs j
-    `),
-    query<{ priority: string; count: number }>(
-      `SELECT priority, count(*)::int AS count FROM job_scores GROUP BY priority`,
-    ),
-    query<{ role: string; count: number }>(
-      `SELECT role_category AS role, count(*)::int AS count FROM jobs GROUP BY role_category`,
-    ),
-    query<{ source: string; count: number }>(
-      `SELECT source, count(*)::int AS count FROM jobs GROUP BY source ORDER BY count DESC`,
-    ),
-    query<{ company: string; count: number; high: number }>(`
-      SELECT j.company_name AS company,
-             count(*)::int AS count,
-             count(*) FILTER (WHERE s.priority = 'HIGH')::int AS high
-      FROM jobs j
-      LEFT JOIN job_scores s ON s.job_id = j.id
-      GROUP BY j.company_name
-      ORDER BY count DESC
-      LIMIT 12
-    `),
-    query<{ bucket: string; count: number }>(`
-      SELECT CASE
-               WHEN match_score >= 85 THEN '85-100'
-               WHEN match_score >= 70 THEN '70-84'
-               WHEN match_score >= 55 THEN '55-69'
-               WHEN match_score >= 40 THEN '40-54'
-               ELSE '0-39'
-             END AS bucket,
-             count(*)::int AS count
-      FROM job_scores
-      GROUP BY bucket
-    `),
-    query<{ day: string; count: number }>(`
-      SELECT discovered_date::date AS day, count(*)::int AS count
-      FROM jobs
-      WHERE discovered_date >= current_date - INTERVAL '29 days'
-      GROUP BY day
-      ORDER BY day
-    `),
-  ]);
+export type ScoredJob = JobRow & Scored & { application_status: string | null };
 
-  return {
-    totalOpen: totals?.total_open ?? 0,
-    newToday: totals?.new_today ?? 0,
-    companies: totals?.companies ?? 0,
-    scored: totals?.scored ?? 0,
-    highMediumCount: totals?.high_medium ?? 0,
-    byPriority: byPriority.map((r) => ({
-      priority: r.priority as OverviewStats["byPriority"][number]["priority"],
-      count: r.count,
-    })),
-    byRole: byRole.map((r) => ({
-      role: r.role as OverviewStats["byRole"][number]["role"],
-      count: r.count,
-    })),
-    bySource,
-    topCompanies,
-    scoreBuckets,
-    discoveries: discoveries.map((d) => ({
-      day: new Date(d.day).toISOString().slice(0, 10),
-      count: d.count,
-    })),
-  };
+const COLS = `
+  j.id, j.title, j.company_name, j.role_category, j.location, j.source,
+  j.url, j.experience, j.employment_type, j.discovered_date, j.created_date,
+  j.skills, j.description, j.salary_min, j.salary_max, j.currency,
+  c.category, c.tier`;
+
+type RawRow = JobRow & { application_status: string | null };
+
+/** Load the shared corpus for the profile's roles, scored + filtered per user. */
+async function loadScored(profile: Profile, userId: number): Promise<ScoredJob[]> {
+  if (!profile.targetRoles.length) return [];
+  const rows = await query<RawRow>(
+    `SELECT ${COLS}, a.status AS application_status
+     FROM jobs j
+     LEFT JOIN companies c ON c.id = j.company_id
+     LEFT JOIN applications a ON a.job_id = j.id AND a.user_id = $2
+     WHERE j.status = 'open' AND j.role_category = ANY($1)`,
+    [profile.targetRoles, userId],
+  );
+  const out: ScoredJob[] = [];
+  for (const r of rows) {
+    if (!passesProfileFilter(r, profile)) continue;
+    out.push({ ...r, ...scoreJob(r, profile) });
+  }
+  out.sort((a, b) => b.match_score - a.match_score || b.id - a.id);
+  return out;
 }
 
-export interface JobQuery {
+export interface JobUiFilter {
   q?: string;
   role?: string;
   priority?: string;
@@ -112,124 +60,199 @@ export interface JobQuery {
   pageSize?: number;
 }
 
-const SORT_COLUMNS: Record<string, string> = {
-  score: "s.match_score",
-  discovered: "j.discovered_date",
-  company: "j.company_name",
-  title: "j.title",
-};
-
-export async function getJobs(
-  f: JobQuery,
-): Promise<{ rows: JobListItem[]; total: number }> {
-  const where: string[] = [];
-  const params: unknown[] = [];
-  const push = (value: unknown) => {
-    params.push(value);
-    return `$${params.length}`;
-  };
-
+function applyUiFilters(jobs: ScoredJob[], f: JobUiFilter): ScoredJob[] {
+  let r = jobs;
   if (f.q) {
-    const p = push(`%${f.q}%`);
-    where.push(`(j.title ILIKE ${p} OR j.company_name ILIKE ${p})`);
+    const q = f.q.toLowerCase();
+    r = r.filter(
+      (j) =>
+        j.title.toLowerCase().includes(q) ||
+        j.company_name.toLowerCase().includes(q),
+    );
   }
-  if (f.role) where.push(`j.role_category = ${push(f.role)}`);
-  if (f.source) where.push(`j.source = ${push(f.source)}`);
-  if (f.company) where.push(`j.company_name ILIKE ${push(`%${f.company}%`)}`);
-  if (f.location) where.push(`j.location ILIKE ${push(`%${f.location}%`)}`);
-  if (f.priority) where.push(`s.priority = ${push(f.priority)}`);
-  if (f.minScore != null) where.push(`COALESCE(s.match_score, 0) >= ${push(f.minScore)}`);
+  if (f.role) r = r.filter((j) => j.role_category === f.role);
+  if (f.priority) r = r.filter((j) => j.priority === f.priority);
+  if (f.source) r = r.filter((j) => j.source === f.source);
+  if (f.company)
+    r = r.filter((j) =>
+      j.company_name.toLowerCase().includes(f.company!.toLowerCase()),
+    );
+  if (f.location)
+    r = r.filter((j) =>
+      (j.location ?? "").toLowerCase().includes(f.location!.toLowerCase()),
+    );
+  if (f.minScore != null) r = r.filter((j) => j.match_score >= f.minScore!);
+  return r;
+}
 
-  const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
+function sortJobs(jobs: ScoredJob[], sort?: string, dir?: "asc" | "desc"): ScoredJob[] {
+  const mul = dir === "asc" ? 1 : -1;
+  const by: Record<string, (a: ScoredJob, b: ScoredJob) => number> = {
+    score: (a, b) => a.match_score - b.match_score,
+    discovered: (a, b) =>
+      new Date(a.discovered_date).getTime() - new Date(b.discovered_date).getTime(),
+    company: (a, b) => a.company_name.localeCompare(b.company_name),
+    title: (a, b) => a.title.localeCompare(b.title),
+  };
+  const cmp = by[sort ?? "score"] ?? by.score;
+  return [...jobs].sort((a, b) => mul * cmp(a, b) || b.id - a.id);
+}
 
-  const sortCol = SORT_COLUMNS[f.sort ?? "score"] ?? SORT_COLUMNS.score;
-  const dir = f.dir === "asc" ? "ASC" : "DESC";
+export async function getJobsForProfile(
+  profile: Profile,
+  userId: number,
+  f: JobUiFilter,
+): Promise<{ rows: ScoredJob[]; total: number; facets: JobFacets }> {
+  const all = await loadScored(profile, userId);
+  const facets: JobFacets = {
+    sources: [...new Set(all.map((j) => j.source))].sort(),
+    companies: [],
+  };
+  const filtered = sortJobs(applyUiFilters(all, f), f.sort, f.dir);
   const page = Math.max(1, f.page ?? 1);
   const pageSize = Math.min(100, Math.max(1, f.pageSize ?? 25));
-  const offset = (page - 1) * pageSize;
-
-  const totalRow = await queryOne<{ count: number }>(
-    `SELECT count(*)::int AS count
-     FROM jobs j
-     LEFT JOIN job_scores s ON s.job_id = j.id
-     ${whereSql}`,
-    params,
-  );
-
-  const rows = await query<JobListItem>(
-    `SELECT j.id, j.title, j.company_name, j.role_category, j.location, j.source,
-            j.url, j.experience, j.discovered_date,
-            s.match_score, s.priority, c.tier,
-            a.status AS application_status
-     FROM jobs j
-     LEFT JOIN job_scores s ON s.job_id = j.id
-     LEFT JOIN companies c ON c.id = j.company_id
-     LEFT JOIN applications a ON a.job_id = j.id
-     ${whereSql}
-     ORDER BY ${sortCol} ${dir} NULLS LAST, j.id DESC
-     LIMIT ${pageSize} OFFSET ${offset}`,
-    params,
-  );
-
-  return { rows, total: totalRow?.count ?? 0 };
-}
-
-export async function getJobFacets(): Promise<JobFacets> {
-  const sources = await query<{ source: string }>(
-    `SELECT DISTINCT source FROM jobs ORDER BY source`,
-  );
-  const companies = await query<{ company_name: string }>(
-    `SELECT company_name FROM jobs GROUP BY company_name ORDER BY count(*) DESC LIMIT 300`,
-  );
+  const start = (page - 1) * pageSize;
   return {
-    sources: sources.map((s) => s.source),
-    companies: companies.map((c) => c.company_name),
+    rows: filtered.slice(start, start + pageSize),
+    total: filtered.length,
+    facets,
   };
 }
 
-export async function getJob(id: number): Promise<JobDetail | null> {
-  return queryOne<JobDetail>(
-    `SELECT j.id, j.title, j.company_name, j.role_category, j.location, j.source,
-            j.url, j.experience, j.discovered_date, j.description, j.employment_type,
-            j.skills, j.created_date, j.salary_min, j.salary_max, j.currency,
-            c.tier, c.category,
-            s.match_score, s.priority, s.skill_score, s.experience_score,
-            s.location_score, s.seniority_score, s.company_score,
-            s.interview_likelihood, s.matched_skills, s.missing_skills, s.scored_by,
-            a.status AS application_status
+export async function getJobDetail(
+  profile: Profile,
+  userId: number,
+  id: number,
+): Promise<ScoredJob | null> {
+  const r = await queryOne<RawRow>(
+    `SELECT ${COLS}, a.status AS application_status
      FROM jobs j
-     LEFT JOIN job_scores s ON s.job_id = j.id
      LEFT JOIN companies c ON c.id = j.company_id
-     LEFT JOIN applications a ON a.job_id = j.id
+     LEFT JOIN applications a ON a.job_id = j.id AND a.user_id = $2
      WHERE j.id = $1`,
-    [id],
+    [id, userId],
   );
+  return r ? { ...r, ...scoreJob(r, profile) } : null;
 }
 
-export async function getApplicationsBoard(): Promise<ApplicationCard[]> {
-  return query<ApplicationCard>(`
-    SELECT a.job_id, a.status, a.last_update,
-           j.title, j.company_name, j.role_category, j.location, j.url,
-           s.match_score, s.priority
-    FROM applications a
-    JOIN jobs j ON j.id = a.job_id
-    LEFT JOIN job_scores s ON s.job_id = j.id
-    ORDER BY a.last_update DESC
-  `);
+export async function getOverviewForProfile(
+  profile: Profile,
+  userId: number,
+): Promise<OverviewStats> {
+  const jobs = await loadScored(profile, userId);
+  const today = new Date().toISOString().slice(0, 10);
+
+  const tally = <T extends string>(key: (j: ScoredJob) => T) => {
+    const m = new Map<T, number>();
+    for (const j of jobs) m.set(key(j), (m.get(key(j)) ?? 0) + 1);
+    return m;
+  };
+
+  const prio = tally((j) => j.priority);
+  const roles = tally((j) => j.role_category as RoleCategory);
+  const sources = tally((j) => j.source);
+
+  const companyMap = new Map<string, { count: number; high: number }>();
+  for (const j of jobs) {
+    const e = companyMap.get(j.company_name) ?? { count: 0, high: 0 };
+    e.count += 1;
+    if (j.priority === "HIGH") e.high += 1;
+    companyMap.set(j.company_name, e);
+  }
+  const topCompanies = [...companyMap.entries()]
+    .map(([company, v]) => ({ company, ...v }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 12);
+
+  const bucketOf = (s: number) =>
+    s >= 85 ? "85-100" : s >= 70 ? "70-84" : s >= 55 ? "55-69" : s >= 40 ? "40-54" : "0-39";
+  const buckets = tally((j) => bucketOf(j.match_score));
+
+  const dayMap = new Map<string, number>();
+  const cutoff = Date.now() - 29 * 86_400_000;
+  for (const j of jobs) {
+    const d = new Date(j.discovered_date);
+    if (d.getTime() < cutoff) continue;
+    const day = d.toISOString().slice(0, 10);
+    dayMap.set(day, (dayMap.get(day) ?? 0) + 1);
+  }
+  const discoveries = [...dayMap.entries()]
+    .map(([day, count]) => ({ day, count }))
+    .sort((a, b) => a.day.localeCompare(b.day));
+
+  return {
+    totalOpen: jobs.length,
+    newToday: jobs.filter(
+      (j) => new Date(j.discovered_date).toISOString().slice(0, 10) === today,
+    ).length,
+    companies: new Set(jobs.map((j) => j.company_name)).size,
+    scored: jobs.length,
+    highMediumCount: (prio.get("HIGH") ?? 0) + (prio.get("MEDIUM") ?? 0),
+    byPriority: (["HIGH", "MEDIUM", "LOW"] as Priority[]).map((p) => ({
+      priority: p,
+      count: prio.get(p) ?? 0,
+    })),
+    byRole: [...roles.entries()].map(([role, count]) => ({ role, count })),
+    bySource: [...sources.entries()]
+      .map(([source, count]) => ({ source, count }))
+      .sort((a, b) => b.count - a.count),
+    topCompanies,
+    scoreBuckets: [...buckets.entries()].map(([bucket, count]) => ({ bucket, count })),
+    discoveries,
+  };
 }
 
-export async function getCompanies(): Promise<CompanyRow[]> {
-  return query<CompanyRow>(`
-    SELECT j.company_name AS name,
-           max(c.category) AS category,
-           max(c.tier) AS tier,
-           count(*)::int AS total,
-           count(*) FILTER (WHERE s.priority = 'HIGH')::int AS high,
-           count(*) FILTER (WHERE s.priority = 'MEDIUM')::int AS medium
-    FROM jobs j
-    LEFT JOIN companies c ON c.id = j.company_id
-    LEFT JOIN job_scores s ON s.job_id = j.id
-    GROUP BY j.company_name
-    ORDER BY total DESC
-  `);
+export async function getApplicationsBoard(
+  profile: Profile,
+  userId: number,
+): Promise<ApplicationCard[]> {
+  const rows = await query<RawRow & { status: string; last_update: string }>(
+    `SELECT ${COLS}, a.status, a.last_update, a.status AS application_status
+     FROM applications a
+     JOIN jobs j ON j.id = a.job_id
+     LEFT JOIN companies c ON c.id = j.company_id
+     WHERE a.user_id = $1
+     ORDER BY a.last_update DESC`,
+    [userId],
+  );
+  return rows.map((r) => {
+    const s = scoreJob(r, profile);
+    return {
+      job_id: r.id,
+      status: r.status,
+      title: r.title,
+      company_name: r.company_name,
+      role_category: r.role_category as RoleCategory,
+      location: r.location,
+      url: r.url,
+      match_score: s.match_score,
+      priority: s.priority,
+      last_update: r.last_update,
+    };
+  });
+}
+
+export async function getCompaniesForProfile(
+  profile: Profile,
+  userId: number,
+): Promise<CompanyRow[]> {
+  const jobs = await loadScored(profile, userId);
+  const m = new Map<string, CompanyRow>();
+  for (const j of jobs) {
+    const e =
+      m.get(j.company_name) ??
+      ({
+        name: j.company_name,
+        category: j.category,
+        tier: j.tier,
+        total: 0,
+        high: 0,
+        medium: 0,
+      } as CompanyRow);
+    e.total += 1;
+    if (j.priority === "HIGH") e.high += 1;
+    if (j.priority === "MEDIUM") e.medium += 1;
+    m.set(j.company_name, e);
+  }
+  return [...m.values()].sort((a, b) => b.total - a.total);
 }

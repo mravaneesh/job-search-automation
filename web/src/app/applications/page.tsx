@@ -1,11 +1,13 @@
 import { getApplicationsBoard } from "@/lib/queries";
+import { requireProfile } from "@/lib/profile";
 import { KanbanBoard } from "@/components/KanbanBoard";
 import { EmptyState, PageHeader } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
 export default async function ApplicationsPage() {
-  const cards = await getApplicationsBoard();
+  const { user, profile } = await requireProfile();
+  const cards = await getApplicationsBoard(profile, user.id);
 
   return (
     <>

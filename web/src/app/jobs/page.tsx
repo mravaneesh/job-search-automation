@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ExternalLink, MapPin, CheckCircle2 } from "lucide-react";
-import { getJobFacets, getJobs, type JobQuery } from "@/lib/queries";
+import { getJobsForProfile, type JobUiFilter } from "@/lib/queries";
+import { requireProfile } from "@/lib/profile";
 import { JobFilters } from "@/components/JobFilters";
 import { Pagination } from "@/components/Pagination";
 import { PageHeader, PriorityBadge, RoleBadge, ScorePill } from "@/components/ui";
@@ -19,9 +20,10 @@ export default async function JobsPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const { user, profile } = await requireProfile();
   const sp = await searchParams;
   const minScoreRaw = first(sp.minScore);
-  const query: JobQuery = {
+  const filter: JobUiFilter = {
     q: first(sp.q),
     role: first(sp.role),
     priority: first(sp.priority),
@@ -35,10 +37,7 @@ export default async function JobsPage({
     pageSize: PAGE_SIZE,
   };
 
-  const [{ rows, total }, facets] = await Promise.all([
-    getJobs(query),
-    getJobFacets(),
-  ]);
+  const { rows, total, facets } = await getJobsForProfile(profile, user.id, filter);
 
   return (
     <>
@@ -133,7 +132,7 @@ export default async function JobsPage({
         </div>
       </div>
 
-      <Pagination page={query.page ?? 1} pageSize={PAGE_SIZE} total={total} />
+      <Pagination page={filter.page ?? 1} pageSize={PAGE_SIZE} total={total} />
     </>
   );
 }
