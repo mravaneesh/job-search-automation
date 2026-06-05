@@ -1,0 +1,105 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #0a0e17;
+  --bg-elev: #111726;
+  --panel: #131a2a;
+  --panel-2: #0f1521;
+  --border: #1f2937;
+  --border-soft: #1a2435;
+  --text: #e6edf6;
+  --muted: #8b98ac;
+  --accent: #6366f1;
+  --accent-2: #818cf8;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-panel: var(--panel);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+* {
+  border-color: var(--border);
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background-image:
+    radial-gradient(900px 500px at 100% -10%, rgba(99, 102, 241, 0.08), transparent),
+    radial-gradient(700px 400px at -10% 0%, rgba(56, 189, 248, 0.06), transparent);
+  background-attachment: fixed;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: #24304a;
+  border-radius: 8px;
+  border: 2px solid var(--bg);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2f3d5c;
+}
+
+@layer components {
+  .card {
+    background: linear-gradient(180deg, var(--panel), var(--panel-2));
+    border: 1px solid var(--border-soft);
+    border-radius: 16px;
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.02) inset,
+      0 12px 30px -18px rgba(0, 0, 0, 0.7);
+  }
+  .panel-hover {
+    transition:
+      border-color 0.15s ease,
+      transform 0.15s ease,
+      background 0.15s ease;
+  }
+  .panel-hover:hover {
+    border-color: #2b3a57;
+    background: #141c2c;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    border-radius: 9999px;
+    border-width: 1px;
+    padding: 0.15rem 0.6rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    line-height: 1.1;
+  }
+  .input {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.5rem 0.7rem;
+    font-size: 0.85rem;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s ease;
+  }
+  .input:focus {
+    border-color: var(--accent);
+  }
+  .input::placeholder {
+    color: #5b6678;
+  }
+}

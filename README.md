@@ -401,3 +401,22 @@ Recommendation: Apply immediately.
 3. `python -m jobsearch resumes-sync && python -m jobsearch tiers-sync`.
 4. Review `config/candidate.yaml` and `config/application.yaml`.
 5. Generate materials for HIGH-priority jobs as shown above.
+
+---
+
+# Web Dashboard (Next.js)
+
+An interactive dashboard lives in [`web/`](web/) — a Next.js 16 app that reads the
+**same Postgres** the pipeline writes to and renders it live (overview charts, a
+filterable/sortable jobs explorer, job detail with score breakdown, an
+application-tracking kanban, and a companies roll-up).
+
+```bash
+docker compose up -d db                 # DB must be running + populated
+python -m jobsearch collect && python -m jobsearch score
+cd web && npm install && npm run dev    # http://localhost:3000
+```
+
+See [`web/README.md`](web/README.md) for details. It replaces the static
+`report --format html` export with a real, interactive UI; the CLI HTML export
+still works for emails/CI.
