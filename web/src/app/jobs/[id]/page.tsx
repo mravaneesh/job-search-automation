@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ArrowLeft, ExternalLink, FileDown } from "lucide-react";
 import { getJobDetail } from "@/lib/queries";
 import { requireProfile } from "@/lib/profile";
 import { StatusControl } from "@/components/StatusControl";
@@ -105,6 +105,12 @@ export default async function JobDetailPage({
             className="inline-flex items-center gap-2 rounded-xl border border-indigo-500/40 bg-indigo-500/10 px-4 py-2 text-sm font-medium text-indigo-200 transition hover:bg-indigo-500/20"
           >
             Open original posting <ExternalLink size={15} />
+          </a>
+          <a
+            href={`/api/resume/${job.id}`}
+            className="inline-flex items-center gap-2 rounded-xl bg-indigo-500 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-indigo-500/20 transition hover:bg-indigo-400"
+          >
+            <FileDown size={15} /> Download tailored résumé
           </a>
         </div>
       </div>
