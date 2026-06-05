@@ -53,8 +53,7 @@ export default async function JobsPage({
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[var(--border)] text-left text-xs uppercase tracking-wide text-[var(--muted)]">
-                <th className="px-4 py-3 font-medium">Role</th>
-                <th className="px-4 py-3 font-medium">Type</th>
+                <th className="px-4 py-3 font-medium">Job</th>
                 <th className="px-4 py-3 font-medium">Location</th>
                 <th className="px-4 py-3 text-center font-medium">Score</th>
                 <th className="px-4 py-3 font-medium">Priority</th>
@@ -77,6 +76,7 @@ export default async function JobsPage({
                       {job.title}
                     </Link>
                     <div className="mt-0.5 flex items-center gap-1.5 text-xs text-[var(--muted)]">
+                      <RoleBadge role={job.role_category} />
                       <span className="truncate">{job.company_name}</span>
                       {job.application_status && (
                         <span className="inline-flex items-center gap-1 text-emerald-400">
@@ -84,9 +84,6 @@ export default async function JobsPage({
                         </span>
                       )}
                     </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <RoleBadge role={job.role_category} />
                   </td>
                   <td className="max-w-[200px] px-4 py-3 text-[var(--muted)]">
                     <span className="flex items-center gap-1">
@@ -120,7 +117,7 @@ export default async function JobsPage({
               {rows.length === 0 && (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={7}
                     className="px-4 py-16 text-center text-[var(--muted)]"
                   >
                     No jobs match these filters.
