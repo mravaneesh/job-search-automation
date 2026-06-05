@@ -212,6 +212,211 @@ companies:
     token: rubrik
     status: implemented
 
+  # ---------- Discovered via ATS token verification (2026-06) ----------
+  # Prominent India-hiring + well-paying companies whose public Greenhouse /
+  # Lever / Ashby boards were confirmed live. The India-or-remote location
+  # filter still applies, so only relevant roles are stored.
+  - name: Datadog
+    category: global
+    source: greenhouse
+    token: datadog
+    status: implemented
+  - name: Okta
+    category: global
+    source: greenhouse
+    token: okta
+    status: implemented
+  - name: Samsara
+    category: global
+    source: greenhouse
+    token: samsara
+    status: implemented
+  - name: Block
+    category: global
+    source: greenhouse
+    token: block
+    status: implemented
+  - name: Brex
+    category: global
+    source: greenhouse
+    token: brex
+    status: implemented
+  - name: Roblox
+    category: global
+    source: greenhouse
+    token: roblox
+    status: implemented
+  - name: Unity
+    category: global
+    source: greenhouse
+    token: unity3d
+    status: implemented
+  - name: Pinterest
+    category: global
+    source: greenhouse
+    token: pinterest
+    status: implemented
+  - name: Cloudflare
+    category: global
+    source: greenhouse
+    token: cloudflare
+    status: implemented
+  - name: Figma
+    category: global
+    source: greenhouse
+    token: figma
+    status: implemented
+  - name: Affirm
+    category: global
+    source: greenhouse
+    token: affirm
+    status: implemented
+  - name: Reddit
+    category: global
+    source: greenhouse
+    token: reddit
+    status: implemented
+  - name: Robinhood
+    category: global
+    source: greenhouse
+    token: robinhood
+    status: implemented
+  - name: GitLab
+    category: global
+    source: greenhouse
+    token: gitlab
+    status: implemented
+  - name: Instacart
+    category: global
+    source: greenhouse
+    token: instacart
+    status: implemented
+  - name: Asana
+    category: global
+    source: greenhouse
+    token: asana
+    status: implemented
+  - name: Twilio
+    category: global
+    source: greenhouse
+    token: twilio
+    status: implemented
+  - name: Lyft
+    category: global
+    source: greenhouse
+    token: lyft
+    status: implemented
+  - name: Flexport
+    category: global
+    source: greenhouse
+    token: flexport
+    status: implemented
+  - name: Discord
+    category: global
+    source: greenhouse
+    token: discord
+    status: implemented
+  - name: Dropbox
+    category: global
+    source: greenhouse
+    token: dropbox
+    status: implemented
+  - name: Chime
+    category: global
+    source: greenhouse
+    token: chime
+    status: implemented
+  - name: Airtable
+    category: global
+    source: greenhouse
+    token: airtable
+    status: implemented
+  - name: Nextdoor
+    category: global
+    source: greenhouse
+    token: nextdoor
+    status: implemented
+  - name: Scale AI
+    category: ai
+    source: greenhouse
+    token: scaleai
+    status: implemented
+  - name: Glean
+    category: ai
+    source: greenhouse
+    token: gleanwork
+    status: implemented
+  - name: Together AI
+    category: ai
+    source: greenhouse
+    token: togetherai
+    status: implemented
+  - name: ElevenLabs
+    category: ai
+    source: ashby
+    token: elevenlabs
+    status: implemented
+  - name: Notion
+    category: ai
+    source: ashby
+    token: notion
+    status: implemented
+  - name: Ramp
+    category: ai
+    source: ashby
+    token: ramp
+    status: implemented
+  - name: Replit
+    category: ai
+    source: ashby
+    token: replit
+    status: implemented
+  - name: Deel
+    category: ai
+    source: ashby
+    token: deel
+    status: implemented
+  - name: Linear
+    category: ai
+    source: ashby
+    token: linear
+    status: implemented
+  - name: Runway
+    category: ai
+    source: ashby
+    token: runway
+    status: implemented
+  - name: Postman
+    category: india_product
+    source: greenhouse
+    token: postman
+    status: implemented
+  - name: HighRadius
+    category: india_product
+    source: greenhouse
+    token: highradius
+    status: implemented
+  - name: Druva
+    category: india_product
+    source: greenhouse
+    token: druva
+    status: implemented
+  - name: Zeta
+    category: unicorn
+    source: lever
+    token: zeta
+    status: implemented
+  - name: Dream11
+    category: unicorn
+    source: lever
+    token: dreamsports
+    status: implemented
+  - name: Atlan
+    category: unicorn
+    source: ashby
+    token: atlan
+    status: implemented
+
 # Aggregator search targets (Playwright-based, deterministic DOM extraction).
 # These are searched by role query, not per-company. Marked pending because
 # they are brittle and subject to anti-bot defences / ToS limits.
