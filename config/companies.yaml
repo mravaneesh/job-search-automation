@@ -588,9 +588,13 @@ companies:
 # These are searched by role query, not per-company. Marked pending because
 # they are brittle and subject to anti-bot defences / ToS limits.
 aggregators:
+  # LinkedIn's public guest endpoint returns real results and is paginated.
   - source: linkedin
-    status: pending
-    locations: ["India", "Remote"]
+    status: implemented
+    locations: ["India", "Remote", "Bengaluru", "Hyderabad", "Gurgaon", "Pune"]
+  # Indeed / Naukri / Wellfound render results client-side and/or block headless
+  # browsers, so their static HTML yields nothing — left pending until a working
+  # JSON-API or rendered-DOM approach is built.
   - source: indeed
     status: pending
     locations: ["India"]

@@ -51,7 +51,15 @@ class AggregatorCollector(abc.ABC):
         return self.parse(html)
 
     def _fetch_html(self, url: str) -> str:
-        # Lazy import so Playwright is only required when actually scraping.
+        return next(iter(self._iter_html([url])), "")
+
+    def _iter_html(self, urls: list[str]):
+        """Yield the HTML for each URL in turn, reusing a single browser.
+
+        Lazily imports Playwright so the rest of the system (and tests) run
+        without browsers. Yielding lets a paginating collector stop early
+        (e.g. on the first empty page) without fetching the remaining URLs.
+        """
         from playwright.sync_api import sync_playwright
 
         with sync_playwright() as p:
@@ -59,7 +67,11 @@ class AggregatorCollector(abc.ABC):
             try:
                 page = browser.new_page(user_agent=self._settings.http_user_agent)
                 page.set_default_navigation_timeout(self._settings.playwright_nav_timeout_ms)
-                page.goto(url, wait_until="domcontentloaded")
-                return page.content()
+                for url in urls:
+                    try:
+                        page.goto(url, wait_until="domcontentloaded")
+                        yield page.content()
+                    except Exception:  # noqa: BLE001 — best-effort; skip a bad page
+                        yield ""
             finally:
                 browser.close()
