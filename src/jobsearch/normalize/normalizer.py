@@ -12,6 +12,7 @@ from jobsearch.dedup.deduper import fingerprint
 from jobsearch.models import Job, RawJob
 from jobsearch.normalize.locations import LocationFilter
 from jobsearch.normalize.roles import RoleClassifier
+from jobsearch.normalize.seniority import SeniorityFilter
 from jobsearch.normalize.skills import SkillExtractor
 from jobsearch.normalize.text import html_to_text
 
@@ -67,10 +68,12 @@ class Normalizer:
         classifier: RoleClassifier,
         skills: SkillExtractor,
         location_filter: LocationFilter | None = None,
+        seniority_filter: SeniorityFilter | None = None,
     ):
         self._classifier = classifier
         self._skills = skills
         self._locations = location_filter or LocationFilter.from_config()
+        self._seniority = seniority_filter or SeniorityFilter.from_config()
 
     @classmethod
     def default(cls) -> Normalizer:
@@ -78,6 +81,7 @@ class Normalizer:
             RoleClassifier.from_config(),
             SkillExtractor.from_config(),
             LocationFilter.from_config(),
+            SeniorityFilter.from_config(),
         )
 
     def normalize(self, raw: RawJob) -> Job | None:
@@ -89,6 +93,10 @@ class Normalizer:
 
         # India-or-remote policy (config/locations.yaml): drop foreign on-site.
         if not self._locations.keep(raw.location):
+            return None
+
+        # Seniority policy (config/experience.yaml): drop over-level roles.
+        if not self._seniority.keep(raw.title, description):
             return None
 
         skills = self._skills.extract(description)

@@ -2,6 +2,38 @@ from jobsearch.collectors.greenhouse import GreenhouseCollector
 from jobsearch.models import RawJob
 from jobsearch.normalize.locations import LocationFilter
 from jobsearch.normalize.normalizer import Normalizer, parse_experience
+from jobsearch.normalize.seniority import SeniorityFilter
+
+
+def test_seniority_filter_drops_managerial_and_overlevel():
+    sf = SeniorityFilter.from_config()
+    # Kept — individual contributor at the candidate's level.
+    assert sf.keep("Android Engineer") is True
+    assert sf.keep("Backend Software Engineer") is True
+    assert sf.keep("Senior Software Engineer") is True  # senior IC still allowed
+    # Dropped — managerial / senior-IC titles.
+    assert sf.keep("Engineering Manager, Mobile") is False
+    assert sf.keep("Staff Android Engineer") is False
+    assert sf.keep("Principal Engineer") is False
+    assert sf.keep("Software Architect") is False
+    assert sf.keep("Director of Engineering") is False
+    # Dropped — explicitly requires more years than the cap.
+    assert sf.keep("Backend Engineer", "Requires 8+ years of experience") is False
+    assert sf.keep("Backend Engineer", "2-4 years preferred") is True
+    # "Stafford" must not be read as "Staff".
+    assert sf.keep("Engineer, Stafford Team") is True
+
+
+def test_normalize_drops_managerial_role():
+    raw = RawJob(
+        source="greenhouse",
+        company_name="Acme",
+        title="Engineering Manager, Android",
+        url="https://x/1",
+        location="Bengaluru, India",
+        description_html="<p>Lead a team building Android apps in Kotlin.</p>",
+    )
+    assert Normalizer.default().normalize(raw) is None
 
 
 def _backend_raw(location: str) -> RawJob:

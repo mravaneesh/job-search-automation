@@ -2,7 +2,7 @@
 # changes. Bump scorer_version whenever the scoring logic changes — existing
 # rows with an older version are automatically re-scored.
 
-scorer_version: 1
+scorer_version: 2
 
 # ----- LLM refinement (optional) -----
 # The engine is fully deterministic by default. When use_llm is true AND an

@@ -1,0 +1,33 @@
+# Experience / seniority filter — drop roles that are too senior for the
+# candidate. Applied during normalization (deterministic, no LLM), so over-level
+# roles never reach scoring or the dashboard.
+#
+# Matching is word-boundary + case-insensitive ("Staff" matches, "Stafford"
+# does not). Tune these to your level — a 2-year engineer wants IC roles.
+
+enabled: true
+
+# Drop a posting whose title contains any of these — managerial and senior-IC
+# levels well above an early-career individual contributor.
+exclude_title_keywords:
+  - manager
+  - engineering manager
+  - senior manager
+  - people manager
+  - director
+  - head
+  - vp
+  - vice president
+  - principal
+  - staff
+  - architect
+  - distinguished
+  - fellow
+  - chief
+  - cto
+  - founding
+
+# Drop a posting that explicitly requires more than this many years of
+# experience (parsed from "N+ years" in the title, else the description).
+# Raise this as you gain experience.
+max_required_years: 5
