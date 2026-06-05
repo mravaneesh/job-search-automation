@@ -417,6 +417,173 @@ companies:
     token: atlan
     status: implemented
 
+  # ---------- Well-funded startups (verified ATS, 2026-06) ----------
+  - name: Cursor
+    category: ai
+    source: ashby
+    token: cursor
+    status: implemented
+  - name: Cognition
+    category: ai
+    source: ashby
+    token: cognition
+    status: implemented
+  - name: Harvey
+    category: ai
+    source: ashby
+    token: harvey
+    status: implemented
+  - name: Sierra
+    category: ai
+    source: ashby
+    token: sierra
+    status: implemented
+  - name: Decagon
+    category: ai
+    source: ashby
+    token: decagon
+    status: implemented
+  - name: Baseten
+    category: ai
+    source: ashby
+    token: baseten
+    status: implemented
+  - name: Abridge
+    category: ai
+    source: ashby
+    token: abridge
+    status: implemented
+  - name: Mercor
+    category: ai
+    source: ashby
+    token: mercor
+    status: implemented
+  - name: Writer
+    category: ai
+    source: ashby
+    token: writer
+    status: implemented
+  - name: Suno
+    category: ai
+    source: ashby
+    token: suno
+    status: implemented
+  - name: Lambda
+    category: ai
+    source: ashby
+    token: lambda
+    status: implemented
+  - name: Modal
+    category: ai
+    source: ashby
+    token: modal
+    status: implemented
+  - name: Fireworks AI
+    category: ai
+    source: ashby
+    token: fireworksai
+    status: implemented
+  - name: Contextual AI
+    category: ai
+    source: ashby
+    token: contextual
+    status: implemented
+  - name: Crusoe
+    category: ai
+    source: ashby
+    token: crusoe
+    status: implemented
+  - name: Vanta
+    category: ai
+    source: ashby
+    token: vanta
+    status: implemented
+  - name: Watershed
+    category: ai
+    source: ashby
+    token: watershed
+    status: implemented
+  - name: Nirvana
+    category: india_product
+    source: ashby
+    token: nirvana
+    status: implemented
+  - name: Temporal
+    category: global
+    source: ashby
+    token: temporal
+    status: implemented
+  - name: Supabase
+    category: global
+    source: ashby
+    token: supabase
+    status: implemented
+  - name: WorkOS
+    category: global
+    source: ashby
+    token: workos
+    status: implemented
+  - name: Render
+    category: global
+    source: ashby
+    token: render
+    status: implemented
+  - name: Persona
+    category: global
+    source: ashby
+    token: persona
+    status: implemented
+  - name: PostHog
+    category: global
+    source: ashby
+    token: posthog
+    status: implemented
+  - name: Column
+    category: global
+    source: ashby
+    token: column
+    status: implemented
+  - name: Airbyte
+    category: global
+    source: ashby
+    token: airbyte
+    status: implemented
+  - name: Modern Treasury
+    category: global
+    source: ashby
+    token: moderntreasury
+    status: implemented
+  - name: Stytch
+    category: global
+    source: ashby
+    token: stytch
+    status: implemented
+  - name: Grafana
+    category: global
+    source: greenhouse
+    token: grafanalabs
+    status: implemented
+  - name: Fivetran
+    category: global
+    source: greenhouse
+    token: fivetran
+    status: implemented
+  - name: Vercel
+    category: global
+    source: greenhouse
+    token: vercel
+    status: implemented
+  - name: CockroachDB
+    category: global
+    source: greenhouse
+    token: cockroachlabs
+    status: implemented
+  - name: Fampay
+    category: unicorn
+    source: lever
+    token: fampay
+    status: implemented
+
 # Aggregator search targets (Playwright-based, deterministic DOM extraction).
 # These are searched by role query, not per-company. Marked pending because
 # they are brittle and subject to anti-bot defences / ToS limits.
