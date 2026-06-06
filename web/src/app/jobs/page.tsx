@@ -55,6 +55,7 @@ export default async function JobsPage({
               <tr className="border-b border-[var(--border)] text-left text-xs uppercase tracking-wide text-[var(--muted)]">
                 <th className="px-4 py-3 font-medium">Job</th>
                 <th className="px-4 py-3 font-medium">Location</th>
+                <th className="px-4 py-3 font-medium">Experience</th>
                 <th className="px-4 py-3 text-center font-medium">Score</th>
                 <th className="px-4 py-3 font-medium">Priority</th>
                 <th className="px-4 py-3 font-medium">Source</th>
@@ -91,6 +92,15 @@ export default async function JobsPage({
                       <span className="line-clamp-1">{job.location ?? "—"}</span>
                     </span>
                   </td>
+                  <td className="whitespace-nowrap px-4 py-3">
+                    {job.experience ? (
+                      <span className="rounded-md border border-[var(--border)] bg-white/[0.03] px-2 py-0.5 text-xs text-slate-300">
+                        {job.experience}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-[var(--muted)]">—</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-center">
                     <ScorePill score={job.match_score} />
                   </td>
@@ -117,7 +127,7 @@ export default async function JobsPage({
               {rows.length === 0 && (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={8}
                     className="px-4 py-16 text-center text-[var(--muted)]"
                   >
                     No jobs match these filters.
