@@ -1,84 +1,90 @@
 import { redirect } from "next/navigation";
-import { Radar } from "lucide-react";
+import { Radar, Target, Building2, FileText, KanbanSquare } from "lucide-react";
 import { auth, devLoginEnabled, googleEnabled } from "@/auth";
-import { signInWithGoogle } from "@/lib/actions";
+import { SignInButtons } from "@/components/SignInButtons";
 
 export const dynamic = "force-dynamic";
+
+const FEATURES = [
+  {
+    icon: Target,
+    title: "Matched to you",
+    desc: "Every job ranked against your profile, skills & experience.",
+    color: "#34d399",
+  },
+  {
+    icon: Building2,
+    title: "100+ companies",
+    desc: "India & remote roles from top product startups and global teams.",
+    color: "#38bdf8",
+  },
+  {
+    icon: FileText,
+    title: "Tailored résumé",
+    desc: "Generate a job-specific résumé PDF in one click.",
+    color: "#a78bfa",
+  },
+  {
+    icon: KanbanSquare,
+    title: "Track applications",
+    desc: "Move every role from saved to offer on your own board.",
+    color: "#fbbf24",
+  },
+];
 
 export default async function SignInPage() {
   const session = await auth();
   if (session?.user?.id) redirect("/");
 
   return (
-    <div className="grid min-h-[80vh] place-items-center">
-      <div className="card w-full max-w-sm p-8 text-center">
-        <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-indigo-500 to-sky-500 shadow-lg shadow-indigo-500/25">
-          <Radar size={26} className="text-white" />
-        </div>
-        <h1 className="text-xl font-semibold">Welcome to JobScope</h1>
-        <p className="mt-1 text-sm text-[var(--muted)]">
-          Sign in to build your profile and get jobs matched to you.
-        </p>
-
-        <div className="mt-6 space-y-3">
-          {googleEnabled && (
-            <form action={signInWithGoogle}>
-              <button
-                type="submit"
-                className="flex w-full items-center justify-center gap-3 rounded-xl border border-[var(--border)] bg-white px-4 py-2.5 text-sm font-medium text-slate-800 transition hover:bg-slate-100"
-              >
-                <GoogleIcon /> Continue with Google
-              </button>
-            </form>
-          )}
-
-          {devLoginEnabled && (
-            <a
-              href="/api/dev-login"
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--border)] px-4 py-2.5 text-sm text-[var(--muted)] transition hover:border-indigo-500/40 hover:text-indigo-200"
-            >
-              Continue as dev user (local)
-            </a>
-          )}
-
-          {!googleEnabled && !devLoginEnabled && (
-            <p className="text-xs text-amber-300/80">
-              No sign-in method configured. Add Google OAuth credentials to
-              <code className="mx-1">web/.env.local</code> or set DEV_LOGIN=1.
-            </p>
-          )}
-        </div>
-
-        {googleEnabled || (
-          <p className="mt-5 text-[11px] leading-relaxed text-[var(--muted)]/70">
-            Tip: add <code>AUTH_GOOGLE_ID</code> / <code>AUTH_GOOGLE_SECRET</code>{" "}
-            to enable Google sign-in.
+    <div className="grid min-h-[88vh] place-items-center">
+      <div className="card w-full max-w-md overflow-hidden">
+        {/* header */}
+        <div className="border-b border-[var(--border-soft)] bg-gradient-to-br from-indigo-500/15 via-transparent to-sky-500/10 px-8 pb-7 pt-9 text-center">
+          <div className="glow-pulse mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-indigo-500 to-sky-500">
+            <Radar size={26} className="text-white" />
+          </div>
+          <h1 className="text-xl font-semibold tracking-tight">
+            Welcome to JobScope
+          </h1>
+          <p className="mt-1 text-sm text-[var(--muted)]">
+            Your personalized job search, automated.
           </p>
-        )}
+        </div>
+
+        {/* value props */}
+        <div className="space-y-1 px-5 py-5">
+          {FEATURES.map(({ icon: Icon, title, desc, color }) => (
+            <div
+              key={title}
+              className="flex items-start gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-white/[0.04]"
+            >
+              <span
+                className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-lg"
+                style={{ background: `${color}1f`, color }}
+              >
+                <Icon size={17} />
+              </span>
+              <div className="leading-snug">
+                <div className="text-sm font-medium">{title}</div>
+                <div className="text-xs text-[var(--muted)]">{desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* sign-in */}
+        <div className="border-t border-[var(--border-soft)] px-8 pb-8 pt-5">
+          <SignInButtons
+            googleEnabled={googleEnabled}
+            devLoginEnabled={devLoginEnabled}
+          />
+          <p className="mt-4 text-center text-[11px] leading-relaxed text-[var(--muted)]/70">
+            We only use your Google account to sign you in. Your profile and
+            saved jobs stay private to you.
+          </p>
+        </div>
       </div>
     </div>
-  );
-}
-
-function GoogleIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24">
-      <path
-        fill="#4285F4"
-        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"
-      />
-      <path
-        fill="#34A853"
-        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"
-      />
-      <path
-        fill="#FBBC05"
-        d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88l3.66-2.84z"
-      />
-      <path
-        fill="#EA4335"
-        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"
-      />
-    </svg>
   );
 }
