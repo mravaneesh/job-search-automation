@@ -108,8 +108,9 @@ companies:
     status: pending
   - name: PhonePe
     category: unicorn
-    source: career_page
-    status: pending
+    source: greenhouse
+    token: phonepe
+    status: implemented
   - name: CRED
     category: unicorn
     source: lever
@@ -117,9 +118,9 @@ companies:
     status: implemented
   - name: Groww
     category: unicorn
-    source: lever
+    source: greenhouse
     token: groww
-    status: pending
+    status: implemented
   - name: Meesho
     category: unicorn
     source: lever
@@ -582,6 +583,135 @@ companies:
     category: unicorn
     source: lever
     token: fampay
+    status: implemented
+
+  # ---------- Well-funded payers, batch 3 (verified ATS, 2026-06) ----------
+  - name: Verkada
+    category: global
+    source: greenhouse
+    token: verkada
+    status: implemented
+  - name: Gusto
+    category: global
+    source: greenhouse
+    token: gusto
+    status: implemented
+  - name: Faire
+    category: global
+    source: greenhouse
+    token: faire
+    status: implemented
+  - name: Monzo
+    category: global
+    source: greenhouse
+    token: monzo
+    status: implemented
+  - name: Amplitude
+    category: global
+    source: greenhouse
+    token: amplitude
+    status: implemented
+  - name: Marqeta
+    category: global
+    source: greenhouse
+    token: marqeta
+    status: implemented
+  - name: Webflow
+    category: global
+    source: greenhouse
+    token: webflow
+    status: implemented
+  - name: Branch
+    category: global
+    source: greenhouse
+    token: branchmetrics
+    status: implemented
+  - name: Lattice
+    category: global
+    source: greenhouse
+    token: lattice
+    status: implemented
+  - name: Coursera
+    category: global
+    source: greenhouse
+    token: coursera
+    status: implemented
+  - name: DevRev
+    category: india_product
+    source: greenhouse
+    token: devrev
+    status: implemented
+  - name: Voodoo
+    category: global
+    source: lever
+    token: voodoo
+    status: implemented
+  - name: Braintrust
+    category: ai
+    source: ashby
+    token: braintrust
+    status: implemented
+  - name: Pylon
+    category: global
+    source: ashby
+    token: pylon
+    status: implemented
+  - name: Resend
+    category: global
+    source: ashby
+    token: resend
+    status: implemented
+  - name: Speakeasy
+    category: global
+    source: ashby
+    token: speakeasy
+    status: implemented
+  - name: Knock
+    category: global
+    source: ashby
+    token: knock
+    status: implemented
+  - name: Trigger.dev
+    category: global
+    source: ashby
+    token: triggerdev
+    status: implemented
+  - name: Hightouch
+    category: global
+    source: ashby
+    token: hightouch
+    status: implemented
+
+  # ---------- Verified India hiring (>= a dozen India roles each, 2026-06) ----------
+  - name: Zscaler
+    category: global
+    source: greenhouse
+    token: zscaler
+    status: implemented
+  - name: HackerRank
+    category: india_product
+    source: greenhouse
+    token: hackerrank
+    status: implemented
+  - name: New Relic
+    category: global
+    source: greenhouse
+    token: newrelic
+    status: implemented
+  - name: Yugabyte
+    category: backend
+    source: greenhouse
+    token: yugabyte
+    status: implemented
+  - name: SingleStore
+    category: backend
+    source: greenhouse
+    token: singlestore
+    status: implemented
+  - name: Fi Money
+    category: unicorn
+    source: lever
+    token: epifi
     status: implemented
 
 # Aggregator search targets (Playwright-based, deterministic DOM extraction).

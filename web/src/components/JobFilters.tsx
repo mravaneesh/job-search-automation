@@ -14,6 +14,7 @@ const ROLES = [
   { v: "devops", label: "DevOps" },
   { v: "data_engineering", label: "Data Eng" },
   { v: "ai_ml", label: "AI/ML" },
+  { v: "software", label: "Software" },
 ];
 const PRIORITIES = [
   { v: "", label: "Any priority" },

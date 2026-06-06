@@ -53,7 +53,11 @@ class SeniorityFilter:
         if not self.enabled:
             return True
         title_l = (title or "").lower()
-        if any(p.search(title_l) for p in self.exclude_patterns):
+        # "Member of Technical Staff" (MTS) is a standard IC title at AI labs
+        # (OpenAI, Anthropic, xAI, DevRev), not a seniority level — neutralise the
+        # "staff" token so it isn't mistaken for a Staff-level role.
+        checked = title_l.replace("technical staff", "technical ic")
+        if any(p.search(checked) for p in self.exclude_patterns):
             return False
         if self.max_required_years is not None:
             # Prefer an explicit requirement in the title, else the description.

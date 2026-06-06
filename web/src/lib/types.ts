@@ -7,7 +7,8 @@ export type RoleCategory =
   | "backend"
   | "devops"
   | "data_engineering"
-  | "ai_ml";
+  | "ai_ml"
+  | "software";
 
 export interface JobListItem {
   id: number;

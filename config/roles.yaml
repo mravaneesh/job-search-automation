@@ -6,7 +6,7 @@
 # boundaries. Precision is favoured over recall: a generic "Software Engineer"
 # with no role-specific signal is intentionally not collected.
 
-priority: [ios, android, fullstack, frontend, devops, data_engineering, ai_ml, backend]
+priority: [ios, android, fullstack, frontend, devops, data_engineering, ai_ml, backend, software]
 
 roles:
   android:
@@ -113,3 +113,21 @@ roles:
       - backend engineer
       - distributed systems
       - microservices architecture
+
+  # Generic catch-all for software roles with no role-specific signal in the
+  # title (e.g. "Software Engineer", "SDE", "Member of Technical Staff"). Lowest
+  # priority, so specific roles above always win first.
+  software:
+    title_keywords:
+      - software engineer
+      - software developer
+      - software development engineer
+      - sde
+      - member of technical staff
+      - product engineer
+      - founding engineer
+      - programmer
+      - applications developer
+    description_keywords:
+      - software engineer
+      - software developer

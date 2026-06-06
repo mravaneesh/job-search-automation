@@ -9,6 +9,7 @@ export const ROLE_LABELS: Record<RoleCategory, string> = {
   devops: "DevOps",
   data_engineering: "Data Eng",
   ai_ml: "AI/ML",
+  software: "Software",
 };
 
 export const ROLE_COLORS: Record<RoleCategory, string> = {
@@ -20,6 +21,7 @@ export const ROLE_COLORS: Record<RoleCategory, string> = {
   devops: "#2dd4bf", // teal
   data_engineering: "#facc15", // amber
   ai_ml: "#a78bfa", // violet
+  software: "#818cf8", // indigo
 };
 
 export const PRIORITY_COLORS: Record<Priority, string> = {
