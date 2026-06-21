@@ -11,8 +11,11 @@ import type {
   ApplicationCard,
   CompanyRow,
   JobFacets,
+  OutreachStatus,
   OverviewStats,
   Priority,
+  RecruiterCompanyRow,
+  RecruiterContact,
   RoleCategory,
 } from "./types";
 
@@ -255,4 +258,73 @@ export async function getCompaniesForProfile(
     m.set(j.company_name, e);
   }
   return [...m.values()].sort((a, b) => b.total - a.total);
+}
+
+// ── Recruiters ──────────────────────────────────────────────────────────────
+
+const STATUS_RANK: Record<string, number> = {
+  replied: 3,
+  contacted: 2,
+  not_contacted: 1,
+  not_relevant: 0,
+};
+
+export async function getRecruitersForUser(userId: number): Promise<RecruiterContact[]> {
+  return query<RecruiterContact>(
+    `SELECT id, company_name, name, title, linkedin_url, email,
+            outreach_status, notes, created_at, last_contacted_at
+     FROM recruiters
+     WHERE user_id = $1
+     ORDER BY created_at DESC`,
+    [userId],
+  );
+}
+
+export async function getRecruiterCompanies(
+  profile: Profile,
+  userId: number,
+): Promise<RecruiterCompanyRow[]> {
+  const jobs = await loadScored(profile, userId);
+
+  // count open jobs per company
+  const jobCounts = new Map<string, number>();
+  for (const j of jobs) {
+    jobCounts.set(j.company_name, (jobCounts.get(j.company_name) ?? 0) + 1);
+  }
+
+  // load recruiter contacts for this user
+  const contacts = await query<{ company_name: string; outreach_status: string }>(
+    `SELECT company_name, outreach_status FROM recruiters WHERE user_id = $1`,
+    [userId],
+  );
+
+  // aggregate per company
+  const contactMap = new Map<string, { count: number; best: string }>();
+  for (const c of contacts) {
+    const cur = contactMap.get(c.company_name);
+    const rank = STATUS_RANK[c.outreach_status] ?? 0;
+    if (!cur || rank > STATUS_RANK[cur.best]) {
+      contactMap.set(c.company_name, {
+        count: (cur?.count ?? 0) + 1,
+        best: c.outreach_status,
+      });
+    } else {
+      contactMap.set(c.company_name, { ...cur, count: cur.count + 1 });
+    }
+  }
+
+  // companies that have open jobs OR have recruiter contacts
+  const allCompanies = new Set([...jobCounts.keys(), ...contactMap.keys()]);
+
+  return [...allCompanies]
+    .map((name) => {
+      const cm = contactMap.get(name);
+      return {
+        company_name: name,
+        open_jobs: jobCounts.get(name) ?? 0,
+        recruiter_count: cm?.count ?? 0,
+        best_status: (cm?.best ?? null) as OutreachStatus | null,
+      };
+    })
+    .sort((a, b) => b.open_jobs - a.open_jobs || a.company_name.localeCompare(b.company_name));
 }

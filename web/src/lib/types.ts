@@ -87,3 +87,25 @@ export interface JobFacets {
   sources: string[];
   companies: string[];
 }
+
+export type OutreachStatus = "not_contacted" | "contacted" | "replied" | "not_relevant";
+
+export interface RecruiterContact {
+  id: number;
+  company_name: string;
+  name: string | null;
+  title: string | null;
+  linkedin_url: string | null;
+  email: string | null;
+  outreach_status: OutreachStatus;
+  notes: string | null;
+  created_at: string;
+  last_contacted_at: string | null;
+}
+
+export interface RecruiterCompanyRow {
+  company_name: string;
+  open_jobs: number;
+  recruiter_count: number;
+  best_status: OutreachStatus | null;
+}

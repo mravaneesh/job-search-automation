@@ -58,6 +58,52 @@ export async function removeApplication(jobId: number) {
   revalidatePath(`/jobs/${jobId}`);
 }
 
+// ---- recruiter outreach tracking ------------------------------------------
+
+const VALID_OUTREACH = ["not_contacted", "contacted", "replied", "not_relevant"] as const;
+
+export async function addRecruiter(formData: FormData) {
+  const user = await requireUser();
+  const company_name = String(formData.get("company_name") ?? "").trim();
+  if (!company_name) throw new Error("company_name required");
+
+  await query(
+    `INSERT INTO recruiters (user_id, company_name, name, title, linkedin_url, email, notes, outreach_status)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, 'not_contacted')`,
+    [
+      user.id,
+      company_name,
+      (formData.get("name") as string | null) || null,
+      (formData.get("title") as string | null) || null,
+      (formData.get("linkedin_url") as string | null) || null,
+      (formData.get("email") as string | null) || null,
+      (formData.get("notes") as string | null) || null,
+    ],
+  );
+  revalidatePath("/recruiters");
+}
+
+export async function updateRecruiterStatus(id: number, status: string) {
+  if (!VALID_OUTREACH.includes(status as (typeof VALID_OUTREACH)[number])) {
+    throw new Error(`invalid status: ${status}`);
+  }
+  const user = await requireUser();
+  await query(
+    `UPDATE recruiters
+     SET outreach_status = $1,
+         last_contacted_at = CASE WHEN $1 IN ('contacted','replied') THEN now() ELSE last_contacted_at END
+     WHERE id = $2 AND user_id = $3`,
+    [status, id, user.id],
+  );
+  revalidatePath("/recruiters");
+}
+
+export async function deleteRecruiter(id: number) {
+  const user = await requireUser();
+  await query(`DELETE FROM recruiters WHERE id = $1 AND user_id = $2`, [id, user.id]);
+  revalidatePath("/recruiters");
+}
+
 // ---- onboarding / profile -------------------------------------------------
 
 function splitCsvOrList(formData: FormData, key: string): string[] {

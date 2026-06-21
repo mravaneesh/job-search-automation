@@ -10,6 +10,7 @@ import {
   Radar,
   UserCog,
   LogOut,
+  Users,
 } from "lucide-react";
 import { doSignOut } from "@/lib/actions";
 
@@ -18,6 +19,7 @@ const NAV = [
   { href: "/jobs", label: "Jobs", icon: Briefcase },
   { href: "/applications", label: "Applications", icon: KanbanSquare },
   { href: "/companies", label: "Companies", icon: Building2 },
+  { href: "/recruiters", label: "Recruiters", icon: Users },
   { href: "/onboarding", label: "My profile", icon: UserCog },
 ];
 
